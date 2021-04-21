@@ -2,11 +2,11 @@
   (:require [membrane.ui :as ui
              :refer [IChildren -children
                      IBounds -bounds bounds]]
-            [membrane.skia :as backend]
+            ;; [membrane.skia :as backend]
             [fipp.edn :as fipp]
 
              [clojure.string :as str]
-             [fipp.ednize]
+             fipp.ednize
             [fipp.visit :refer [visit visit*]])
   (:import com.github.davidmoten.rtree.RTree
            com.github.davidmoten.rtree.Entries
@@ -119,14 +119,12 @@
 (defrecord EdnPrinter [symbols print-meta print-length print-level]
 
   fipp.visit/IVisitor
-
-
   (visit-unknown [this x]
     (visit this (fipp.ednize/edn x)))
 
 
   (visit-nil [this]
-    (Text. :atom  "nil")) []
+    (Text. :atom  "nil"))
 
   (visit-boolean [this x]
     (Text. :atom  (str x)))
@@ -207,7 +205,9 @@
      (binding [*print-meta* false]
        (visit printer x)))))
 
+(comment
+  (require '[membrane.skia :as backend])
 
-(defn show [v]
-  (let [view (pretty v)]
-    (backend/run (constantly view))))
+  (defn show [v]
+    (let [view (pretty v)]
+      (backend/run (constantly view)))))
