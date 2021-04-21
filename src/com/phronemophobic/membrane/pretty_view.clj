@@ -6,12 +6,8 @@
             [fipp.edn :as fipp]
 
              [clojure.string :as str]
-             [fipp.ednize;; :refer [edn record->tagged]
-              ]
-            [fipp.visit :refer [visit visit*]]
-            ;;[fipp.engine :refer (pprint-document)]
-            
-)
+             [fipp.ednize]
+            [fipp.visit :refer [visit visit*]])
   (:import com.github.davidmoten.rtree.RTree
            com.github.davidmoten.rtree.Entries
            com.github.davidmoten.rtree.geometry.Geometries
@@ -130,41 +126,32 @@
 
 
   (visit-nil [this]
-    (Text. :atom  "nil")
-    #_[:text "nil"])
+    (Text. :atom  "nil")) []
 
   (visit-boolean [this x]
-    (Text. :atom  (str x))
-    #_[:text (str x)])
+    (Text. :atom  (str x)))
 
   (visit-string [this x]
     (Text. :string 
            (binding [*print-readably* true]
-             (pr-str x)))
-    #_[:text (binding [*print-readably* true]
-               (pr-str x))])
+             (pr-str x))))
 
   (visit-character [this x]
     (Text. :string-2 
            (binding [*print-readably* true]
-             (pr-str x)))
-    #_[:text (binding [*print-readably* true]
-             (pr-str x))])
+             (pr-str x))))
 
   (visit-symbol [this x]
     (Text. :variable 
-           (str x))
-    #_[:text (str x)])
+           (str x)))
 
   (visit-keyword [this x]
     (Text. :keyword 
-           (str x))
-    #_[:text (str x)])
+           (str x)))
 
   (visit-number [this x]
     (binding [*print-dup* false]
-      (Text. :number  (pr-str x))
-      #_[:text (pr-str x)]))
+      (Text. :number  (pr-str x))))
 
   (visit-seq [this x]
     (if-let [pretty (symbols (first x))]
@@ -175,10 +162,9 @@
     (pretty-coll this "[" x (Line.) "]" visit))
 
   (visit-map [this x]
-    (pretty-coll this "{" x (Line.)#_(Span. [(Text. nil ",") (Line.)]) "}"
+    (pretty-coll this "{" x (Line.) "}"
                  (fn [printer [k v]]
-                   (Span. [(visit printer k) (Space.) (visit printer v)])
-                   #_[:span (visit printer k) " " (visit printer v)])))
+                   (Span. [(visit printer k) (Space.) (visit printer v)]))))
 
   (visit-set [this x]
     (pretty-coll this "#{" x (Line.) "}" visit))
@@ -189,19 +175,13 @@
       (when (or (and print-meta (meta form))
                 (not (coll? form)))
         " ")
-      (visit this form)])
-    #_[:group "#" (str tag)
-       (when (or (and print-meta (meta form))
-                 (not (coll? form)))
-         " ")
-       (visit this form)])
+      (visit this form)]))
 
 
   (visit-meta [this m x]
     (if print-meta
       (Align. (Span.[ "^" (visit this m)])
               (Line.) (visit* this x))
-      #_[:align [:span "^" (visit this m)] :line (visit* this x)]
       (visit* this x)))
 
   (visit-var [this x]
@@ -209,7 +189,7 @@
 
   (visit-pattern [this x]
     (Text. :string  (pr-str x))
-    #_[:text (pr-str x)])
+)
 
   (visit-record [this x]
     (visit this (fipp.ednize/record->tagged x)))
