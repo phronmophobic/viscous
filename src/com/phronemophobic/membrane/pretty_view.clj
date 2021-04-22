@@ -169,10 +169,12 @@
 
   (visit-tagged [this {:keys [tag form]}]
     (Group.
-     ["#" (str tag)
-      (when (or (and print-meta (meta form))
-                (not (coll? form)))
-        " ")
+     [(Text. nil
+             (str
+              "#" (str tag)
+              (when (or (and print-meta (meta form))
+                        (not (coll? form)))
+                " ")))
       (visit this form)]))
 
 
