@@ -30,6 +30,21 @@
       <artifactId>clojure</artifactId>
       <version>1.10.3</version>
     </dependency>
+    <dependency>
+      <groupId>com.phronemophobic</groupId>
+      <artifactId>membrane</artifactId>
+      <version>0.9.25-beta</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.davidmoten</groupId>
+      <artifactId>rtree</artifactId>
+      <version>0.8.7</version>
+    </dependency>
+    <dependency>
+      <groupId>fipp</groupId>
+      <artifactId>fipp</artifactId>
+      <version>0.6.23</version>
+    </dependency>
   </dependencies>
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -38,10 +53,6 @@
     <repository>
       <id>clojars</id>
       <url>https://repo.clojars.org/</url>
-    </repository>
-    <repository>
-      <id>sonatype</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
     </repository>
   </repositories>
   <distributionManagement>
