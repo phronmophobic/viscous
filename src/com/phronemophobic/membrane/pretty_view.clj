@@ -53,7 +53,7 @@
     [(ui/with-color (get colors color [0 0 0])
        (ui/label
         s
-        (ui/font "Menlo.ttc" 11)))]))
+        (ui/font "Menlo" 11)))]))
 (defrecord Group [xs]
   ui/IOrigin
   (-origin [this] (ui/origin (ui/children this)))
@@ -208,8 +208,9 @@
        (visit printer x)))))
 
 (comment
-  (require '[membrane.skia :as backend])
+  (require '[membrane.java2d :as backend])
 
   (defn show [v]
     (let [view (pretty v)]
-      (backend/run (constantly view)))))
+      (backend/run (constantly view))))
+  ,)
