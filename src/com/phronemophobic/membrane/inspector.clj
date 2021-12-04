@@ -106,17 +106,19 @@
     []
     (let [chunk-size (max 1
                           (int (/ width n)))]
-      (loop [partitions []
-             width width]
-        (cond
-          (zero? width) partitions
+      (vec
+       (reverse
+        (loop [partitions []
+               width width]
+          (cond
+            (zero? width) partitions
 
-          (>= (inc (count partitions))
-              n)
-          (conj partitions width)
+            (>= (inc (count partitions))
+                n)
+            (conj partitions width)
 
-          :else (recur (conj partitions chunk-size)
-                       (- width chunk-size)))))))
+            :else (recur (conj partitions chunk-size)
+                         (- width chunk-size)))))))))
 
 (defn split-ratio [width r]
   (let [left (int (Math/ceil (* r width)))
