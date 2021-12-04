@@ -55,26 +55,30 @@
 (defn indent [n]
   (ui/spacer (* n cell-width) 0))
 
-(defn inspector-dispatch [{:keys [obj]}]
-  (cond
-    (string? obj) :string
-    (integer? obj) :integer
-    (float? obj) :float
-    (double? obj) :double
-    (char? obj) :char
-    (map-entry? obj) :map-entry
-    (map? obj) :map
-    (set? obj) :set
-    (list? obj) :list
-    (vector? obj) :vector
-    (symbol? obj) :symbol
-    (keyword? obj) :keyword
-    (boolean? obj) :boolean
-    (nil? obj) :nil
+(defn inspector-dispatch [{:keys [obj width height]}]
+  (if (or (<= width 0)
+          (<= height 0))
+    :no-space
+    (cond
+      (string? obj) :string
+      (integer? obj) :integer
+      (float? obj) :float
+      (double? obj) :double
+      (char? obj) :char
+      (map-entry? obj) :map-entry
+      (map? obj) :map
+      (set? obj) :set
+      (list? obj) :list
+      (vector? obj) :vector
+      (symbol? obj) :symbol
+      (keyword? obj) :keyword
+      (boolean? obj) :boolean
+      (nil? obj) :nil
 
-    (coll? obj) :collection
-    (seqable? obj) :seqable
-    :else :object))
+      (coll? obj) :collection
+      (seqable? obj) :seqable
+      (instance? clojure.lang.IDeref obj) :deref
+      :else :object)))
 
 
 (defmulti inspector* inspector-dispatch)
@@ -127,6 +131,10 @@
              left)
      (ilabel (type obj)
              right))))
+
+(defmethod inspector* :no-space
+  [{:keys [obj width height]}]
+  nil)
 
 (defmethod inspector* :string
   [{:keys [obj width height]}]
@@ -320,6 +328,35 @@
   [{:keys [obj width height] :as m}]
   (inspector-map-entry m))
 
+(defn inspector-deref [{:keys [obj width height path highlight-path]}]
+  (let [[left right] (split-ratio (- width 2) 1/3)
+        k (symbol (.getName (class obj)))
+        v (if (instance? clojure.lang.IPending obj)
+            (if (realized? obj)
+              @obj
+              "unrealized?")
+            (deref obj))]
+    (ui/horizontal-layout
+     (indent 1)
+     (inspector* {:obj k
+                  :height height
+                  :width left})
+     (indent 1)
+     (let [child-path (conj path '(deref))]
+       (wrap-highlight
+        child-path
+        highlight-path
+        (wrap-selection v
+                        child-path
+                        (inspector* {:obj v
+                                     :height height
+                                     :path child-path
+                                     :highlight-path highlight-path
+                                     :width right})))))))
+(defmethod inspector* :deref
+  [{:keys [obj width height] :as m}]
+  (inspector-deref m))
+
 
 (defn inspector-symbol [{:keys [obj width height]}]
   (let [ns (namespace obj)
@@ -416,7 +453,6 @@
               offsets))]])
       ::next-chunk
       (fn [delta]
-        (prn "next chunk" delta)
         [[:update $offsets
           (fn [offsets]
             (let [offset (peek offsets)]
@@ -472,10 +508,16 @@
 
   
 (comment
-  (def data (json/read-str (slurp "https://raw.githubusercontent.com/t-mon/selffinding-chronicles/cb24e067579ba755c26ef642b24f9d2a8d3b45b9/gamedata/savegames/test-savegame.json")))
+  (def data (json/read-str (slurp "https://raw.githubusercontent.com/dreadwarrior/ext-giftcertificates/5e447a7316aea57a372203f2aa8de5aef3af671a/ExtensionBuilder.json")))
   
   data
   (show data)
   ,
 )
 
+(comment
+  (def a (atom nil))
+  (def b (atom a))
+  (reset! a b)
+  (show a)
+  ,)
