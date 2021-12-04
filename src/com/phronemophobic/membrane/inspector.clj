@@ -141,7 +141,7 @@
 (defmethod inspector* :string
   [{:keys [obj width height]}]
   (ui/with-color (:string colors)
-    (ilabel (str "\"" obj "\"")
+    (ilabel (pr-str obj)
             width)))
 
 (defn wrap-selection [x path elem]
