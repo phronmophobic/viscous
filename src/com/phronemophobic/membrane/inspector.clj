@@ -170,6 +170,67 @@
                        body)
      body)))
 
+(defn inspector-seq-horizontal [{:keys [obj
+                                        width
+                                        height
+                                        highlight-path
+                                        path
+                                        offset
+                                        open close]}]
+  (let [open-close-width (+ (count open)
+                            (count close))]
+    (when (> width open-close-width )
+      (let [body
+            (loop [body []
+                   i 0
+                   width (- width
+                            (count open)
+                            (count close))
+                   obj (seq obj)]
+              (if (or (not obj)
+                      (<= width 0))
+                body
+                (let [x (first obj)
+                      child-path (if (map-entry? x)
+                                   (list 'find (key x))
+                                   (list 'nth i))
+                      path (conj path
+                                 child-path)
+                      elem
+                      (wrap-highlight
+                       path
+                       highlight-path
+                       (wrap-selection
+                        x
+                        path
+                        (inspector* {:obj x
+                                     :height 1
+                                     :highlight-path highlight-path
+                                     :path path
+                                     :width width})))
+                      pix-width (ui/width elem)
+                      elem-width (int (Math/ceil (/ pix-width
+                                                    cell-width)))]
+                  (recur (conj body elem)
+                         (inc i)
+                         (- width elem-width
+                            ;; add a space between elements
+                            1
+                            )
+                         (next obj)))))]
+        (when (pos? (count body))
+          (ui/horizontal-layout
+           (ui/with-color (:bracket colors)
+             (ilabel open (count open)))
+           (apply ui/horizontal-layout
+                  (interpose (indent 1)
+                             body))
+           (when (= (count body)
+                    (bounded-count (inc (count body)) obj ))
+            (ui/with-color (:bracket colors)
+              (ilabel close (count close)))))))))
+  )
+
 (def chunk-size 32)
 (defn inspector-seq [{:keys [obj
                              width
@@ -177,10 +238,11 @@
                              highlight-path
                              path
                              offset
-                             open close]}]
+                             open close]
+                      :as m}]
   (let [offset (or offset 0)]
-    (if (< height 3)
-      (ilabel (str open "..." close) width)
+    (if (<= height 3)
+      (inspector-seq-horizontal m)
       (let [obj (if (pos? offset)
                   (drop offset obj)
                   obj)
