@@ -491,69 +491,64 @@
         offsets (or offsets [0])
         offset (peek offsets)]
 
-    (ui/vertical-layout
-     (basic/button {:text "pop"
-                    :on-click
-                    (fn []
-                      (when (seq stack)
-                        (let [{:keys [obj path offsets]} (peek stack)]
-                          [[:set $obj obj]
-                           [:set $path path]
-                           [:set $offsets offsets]
-                           [:update $stack pop]])))})
-     (ui/label (str "offset: " offset))
-     (ui/label (str "path: " (pr-str path) ))
-     (ui/on
-      ::highlight
-      (fn [path]
-        [[:set $highlight-path path]])
-      ::previous-chunk
-      (fn []
-        [[:update $offsets
-          (fn [offsets]
-            (if (> (count offsets) 1)
-              (pop offsets)
-              offsets))]])
-      ::next-chunk
-      (fn [delta]
-        [[:update $offsets
-          (fn [offsets]
-            (let [offset (peek offsets)]
-              (conj offsets (+ offset delta))))]])
+    (ui/padding
+     4
+     (ui/vertical-layout
+      (basic/button {:text "pop"
+                     :on-click
+                     (fn []
+                       (when (seq stack)
+                         (let [{:keys [obj path offsets]} (peek stack)]
+                           [[:set $obj obj]
+                            [:set $path path]
+                            [:set $offsets offsets]
+                            [:update $stack pop]])))})
+      (ui/label (str "offset: " offset))
+      (ui/label (str "path: " (pr-str path) ))
+      (ui/on
+       ::highlight
+       (fn [path]
+         [[:set $highlight-path path]])
+       ::previous-chunk
+       (fn []
+         [[:update $offsets
+           (fn [offsets]
+             (if (> (count offsets) 1)
+               (pop offsets)
+               offsets))]])
+       ::next-chunk
+       (fn [delta]
+         [[:update $offsets
+           (fn [offsets]
+             (let [offset (peek offsets)]
+               (conj offsets (+ offset delta))))]])
 
-      ::select
-      (fn [x child-path]
-        [[:update $stack conj {:obj obj
-                               :path path
-                               :offsets offsets}]
-         [:delete $highlight-path]
-         [:update $path into child-path]
-         [:set $offsets [0]]
-         [:set $obj (wrap x)]])
-      (ui/wrap-on
-       :mouse-move
-       (fn [handler pos]
-         (let [intents (handler pos)]
-           (if (seq intents)
-             intents
-             [[:set $highlight-path nil]])))
-       (inspector* {:obj (-unwrap obj)
-                    :height height
-                    :path []
-                    :offset offset
-                    :highlight-path highlight-path
-                    :width width} ))))))
+       ::select
+       (fn [x child-path]
+         [[:update $stack conj {:obj obj
+                                :path path
+                                :offsets offsets}]
+          [:delete $highlight-path]
+          [:update $path into child-path]
+          [:set $offsets [0]]
+          [:set $obj (wrap x)]])
+       (ui/wrap-on
+        :mouse-move
+        (fn [handler pos]
+          (let [intents (handler pos)]
+            (if (seq intents)
+              intents
+              [[:set $highlight-path nil]])))
+        (inspector* {:obj (-unwrap obj)
+                     :height height
+                     :path []
+                     :offset offset
+                     :highlight-path highlight-path
+                     :width width} )))))))
 
 
 
 
-
-(defn inspect [obj]
-  (backend/run (component/make-app #'inspector
-                                   {:obj (wrap obj)
-                                    :width 80
-                                    :height 20}))
-  )
 
 
 (s/def ::anything any? )
