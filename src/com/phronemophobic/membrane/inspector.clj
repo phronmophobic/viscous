@@ -549,7 +549,7 @@
 
 
 
-(defn show [obj]
+(defn inspect [obj]
   (backend/run (component/make-app #'inspector
                                    {:obj (wrap obj)
                                     :width 80
@@ -562,7 +562,7 @@
   (do
     (def obj (gen/generate (s/gen ::anything) )
       )
-    (show (gen/sample  (s/gen ::anything)
+    (inspect (gen/sample  (s/gen ::anything)
                        100)
           )
     obj)
@@ -572,10 +572,15 @@
 
   
 (comment
+  (require '[pl.danieljanus.tagsoup :as tagsoup])
   (def data (json/read-str (slurp "https://raw.githubusercontent.com/dreadwarrior/ext-giftcertificates/5e447a7316aea57a372203f2aa8de5aef3af671a/ExtensionBuilder.json")))
-  
+
+  (def data (tagsoup/parse-string (slurp "/Users/adrian/workspace/pretty-view/index.html") ))
+
+  (inspect (tagsoup/parse-string (slurp "https://clojure.org/reference/reader")))
+
   data
-  (show data)
+  (inspect data)
   ,
 )
 
@@ -583,5 +588,5 @@
   (def a (atom nil))
   (def b (atom a))
   (reset! a b)
-  (show a)
+  (inspect a)
   ,)
