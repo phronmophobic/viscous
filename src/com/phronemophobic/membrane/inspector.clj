@@ -364,7 +364,6 @@
   (let [[left right] (split-ratio (- width 2) 1/3)
         [k v] obj]
     (ui/horizontal-layout
-     (indent 1)
      (let [child-path (conj path '(key))]
       (wrap-highlight
        child-path
