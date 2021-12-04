@@ -134,42 +134,101 @@
     (ilabel (str "\"" obj "\"")
             width)))
 
-(defn wrap-selection [x elem]
+(defn wrap-selection [x path elem]
   (ui/wrap-on
    :mouse-down
    (fn [handler pos]
      (let [intents (handler pos)]
        (if (seq intents)
          intents
-         [[::select x]])))
+         [[::select x path]])))
    elem))
 
-(defn inspector-seq [{:keys [obj width height
-                              open close]}]
-  (if (< height 3)
-    (ilabel (str open "..." close) width)
-    (let [heights (split-evenly (- height 3)
-                                (min 32 (bounded-count 33 obj)))
-          children (->> obj
-                        (map (fn [height obj]
-                               (wrap-selection obj
-                                               (inspector* {:obj obj
-                                                            :height height
-                                                            :width (dec width)})))
-                             heights)
-                        (apply ui/vertical-layout))]
-      (ui/vertical-layout
-       (ui/with-color (:bracket colors)
-         (ilabel open width))
-       (ui/translate cell-width 0
-                     (ui/vertical-layout
-                      children
-                      (when (or (> (bounded-count 33 obj) 32)
-                                (< (count heights)
-                                   (bounded-count 33 obj)))
-                        (ilabel "..." 3))))
-       (ui/with-color (:bracket colors)
-         (ilabel close width))))))
+(defn wrap-highlight [path highlight-path elem]
+  (let [body
+        (ui/wrap-on
+         :mouse-move
+         (fn [handler pos]
+           (let [intents (handler pos)]
+             (if (seq intents)
+               intents
+               [[::highlight path]])))
+         elem)]
+   (if (= path highlight-path)
+     (ui/fill-bordered [0.2 0.2 0.2 0.1]
+                       0
+                       body)
+     body)))
+
+(def chunk-size 32)
+(defn inspector-seq [{:keys [obj
+                             width
+                             height
+                             highlight-path
+                             path
+                             offset
+                             open close]}]
+  (let [offset (or offset 0)]
+    (if (< height 3)
+      (ilabel (str open "..." close) width)
+      (let [obj (if (pos? offset)
+                  (drop offset obj)
+                  obj)
+            heights (split-evenly (- height 3)
+                                  (min chunk-size (bounded-count (inc chunk-size) obj)))
+            children (->> obj
+                          (map (fn [i height obj]
+                                 (let [child-path (if (map-entry? obj)
+                                                    (list 'find (key obj))
+                                                    (list 'nth i))
+                                       path (conj path
+                                                  child-path)
+                                       body
+                                       (wrap-highlight
+                                        path
+                                        highlight-path
+                                        (wrap-selection obj
+                                                        path
+                                                        (inspector* {:obj obj
+                                                                     :height height
+                                                                     :path path
+                                                                     :highlight-path highlight-path
+                                                                     :width (dec width)})))]
+                                   (if (= path highlight-path)
+                                     (ui/fill-bordered [0.2 0.2 0.2 0.1]
+                                                       0
+                                                       body)
+                                     body)))
+                               (range)
+                               heights)
+                          (apply ui/vertical-layout))]
+        (ui/vertical-layout
+         (ui/with-color (:bracket colors)
+           (ilabel open width))
+         (ui/translate cell-width 0
+                       (ui/vertical-layout
+                        (when (pos? offset)
+                          (ui/on
+                           :mouse-down
+                           (fn [_]
+                             ;; only for top level
+                             (when (empty? path)
+                               [[::previous-chunk]]))
+                           (ilabel "..." 3)))
+                        children
+                        (let [len (bounded-count (inc chunk-size) obj)]
+                         (when (or (> len chunk-size)
+                                   (< (count heights)
+                                      (bounded-count (inc chunk-size) obj)))
+                           (ui/on
+                            :mouse-down
+                            (fn [_]
+                              ;; only for top level
+                              (when (empty? path)
+                                [[::next-chunk (min (count heights) chunk-size)]]))
+                            (ilabel "..." 3))))))
+         (ui/with-color (:bracket colors)
+           (ilabel close width)))))))
 
 
 (defmethod inspector* :vector
@@ -229,20 +288,34 @@
   (inspector-keyword m))
 
 
-(defn inspector-map-entry [{:keys [obj width height]}]
+(defn inspector-map-entry [{:keys [obj width height path highlight-path]}]
   (let [[left right] (split-ratio (- width 2) 1/3)
         [k v] obj]
     (ui/horizontal-layout
      (indent 1)
-     (wrap-selection k
-                     (inspector* {:obj k
-                                  :height height
-                                  :width left}))
+     (let [child-path (conj path '(key))]
+      (wrap-highlight
+       child-path
+       highlight-path
+       (wrap-selection k
+                       child-path
+                       (inspector* {:obj k
+                                    :height height
+                                    :path child-path
+                                    :highlight-path highlight-path
+                                    :width left}))))
      (indent 1)
-     (wrap-selection v
-                     (inspector* {:obj v
-                                  :height height
-                                  :width right})))))
+     (let [child-path (conj path '(val))]
+      (wrap-highlight
+       child-path
+       highlight-path
+       (wrap-selection v
+                       child-path
+                       (inspector* {:obj v
+                                    :height height
+                                    :path child-path
+                                    :highlight-path highlight-path
+                                    :width right})))))))
 (defmethod inspector* :map-entry
   [{:keys [obj width height] :as m}]
   (inspector-map-entry m))
@@ -312,23 +385,65 @@
 
 
 
-(defui inspector [{:keys [obj width height stack]}]
-  (let [stack (or stack [])]
+(defui inspector [{:keys [obj width height stack path highlight-path offsets]}]
+  (let [stack (or stack [])
+        path (or path [])
+        offsets (or offsets [0])
+        offset (peek offsets)]
+
     (ui/vertical-layout
      (basic/button {:text "pop"
                     :on-click
                     (fn []
                       (when (seq stack)
-                        [[:set $obj (peek stack)]
-                         [:update $stack pop]]))})
+                        (let [{:keys [obj path offsets]} (peek stack)]
+                          [[:set $obj obj]
+                           [:set $path path]
+                           [:set $offsets offsets]
+                           [:update $stack pop]])))})
+     (ui/label (str "offset: " offset))
+     (ui/label (str "path: " (pr-str path) ))
      (ui/on
+      ::highlight
+      (fn [path]
+        [[:set $highlight-path path]])
+      ::previous-chunk
+      (fn []
+        [[:update $offsets
+          (fn [offsets]
+            (if (> (count offsets) 1)
+              (pop offsets)
+              offsets))]])
+      ::next-chunk
+      (fn [delta]
+        (prn "next chunk" delta)
+        [[:update $offsets
+          (fn [offsets]
+            (let [offset (peek offsets)]
+              (conj offsets (+ offset delta))))]])
+
       ::select
-      (fn [x]
-        [[:update $stack conj obj]
+      (fn [x child-path]
+        [[:update $stack conj {:obj obj
+                               :path path
+                               :offsets offsets}]
+         [:delete $highlight-path]
+         [:update $path into child-path]
+         [:set $offsets [0]]
          [:set $obj (wrap x)]])
-      (inspector* {:obj (-unwrap obj)
-                   :height height
-                   :width width} )))))
+      (ui/wrap-on
+       :mouse-move
+       (fn [handler pos]
+         (let [intents (handler pos)]
+           (if (seq intents)
+             intents
+             [[:set $highlight-path nil]])))
+       (inspector* {:obj (-unwrap obj)
+                    :height height
+                    :path []
+                    :offset offset
+                    :highlight-path highlight-path
+                    :width width} ))))))
 
 
 
@@ -338,7 +453,7 @@
   (backend/run (component/make-app #'inspector
                                    {:obj (wrap obj)
                                     :width 80
-                                    :height 50}))
+                                    :height 20}))
   )
 
 
@@ -347,11 +462,20 @@
   (do
     (def obj (gen/generate (s/gen ::anything) )
       )
-    (show obj)
+    (show (gen/sample  (s/gen ::anything)
+                       100)
+          )
     obj)
 
   (backend/run #'inspector-test)
   ,)
 
-
+  
+(comment
+  (def data (json/read-str (slurp "https://raw.githubusercontent.com/t-mon/selffinding-chronicles/cb24e067579ba755c26ef642b24f9d2a8d3b45b9/gamedata/savegames/test-savegame.json")))
+  
+  data
+  (show data)
+  ,
+)
 
