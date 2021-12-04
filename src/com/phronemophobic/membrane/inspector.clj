@@ -51,6 +51,7 @@
 
 (def monospaced (ui/font "Menlo" 11))
 (def cell-width (backend/font-advance-x monospaced " "))
+(def cell-height (backend/font-line-height monospaced))
 
 (defn indent [n]
   (ui/spacer (* n cell-width) 0))
@@ -549,6 +550,32 @@
 
 
 
+
+(defn inspect
+  ([obj]
+   (inspect obj {}))
+  ([obj {:keys [width height] :as opts}]
+   (let [width (or width 80)
+         height (or height 40)
+         app (component/make-app #'inspector
+                                 {:obj (wrap obj)
+                                  :width width
+                                  :height height})
+         initial-view (app)
+
+         [empty-width empty-height] (ui/bounds ((component/make-app #'inspector
+                                                                    {:obj (wrap nil)
+                                                                     :width 0
+                                                                     :height 0})))
+         window-width (max empty-width
+                           (* cell-width width))
+         window-height (+ empty-height
+                          height
+                          (* cell-height (inc height)))]
+     (backend/run app
+       {:window-title "Inspect"
+        :window-start-width window-width
+        :window-start-height window-height}))))
 
 
 (s/def ::anything any? )
