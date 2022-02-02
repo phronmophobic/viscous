@@ -1,6 +1,6 @@
 # Viscous
 
-An visual data inspector/explorer that runs in constant space, time, and screen space.
+A visual data inspector/explorer that runs in constant space, time, and screen space.
 
 ![Overview](inspector.gif?raw=true)
 
