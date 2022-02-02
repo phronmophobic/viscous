@@ -1,25 +1,24 @@
 (ns com.phronemophobic.membrane.inspector
   (:require
    [membrane.ui :as ui]
-   [membrane.skia :as backend]
    [membrane.basic-components :as basic]
+   [membrane.toolkit :as tk]
    [membrane.component :refer [defui defeffect]
     :as component]
-   [clojure.zip :as z]
-   [clojure.data.json :as json]
-
-   [clojure.spec.alpha :as s]
-   [clojure.spec.gen.alpha :as gen]))
+   [clojure.zip :as z]))
 
 (defprotocol PWrapped
   (-unwrap [this]))
 
+(deftype APWrapped [obj]
+  Object
+  (hashCode [_] (System/identityHashCode obj))
+  PWrapped
+  (-unwrap [_]
+    obj))
+
 (defn wrap [o]
-  (reify
-    Object
-    (hashCode [_] (System/identityHashCode o))
-    PWrapped
-    (-unwrap [_] o)))
+  (->APWrapped o))
 
 
 (def colors
@@ -49,9 +48,19 @@
    [0.3333333432674408 0.3333333432674408 0.3333333432674408],
    :variable-2 [0.0 0.3333333432674408 0.6666666865348816]})
 
-(def monospaced (ui/font "Menlo" 11))
-(def cell-width (backend/font-advance-x monospaced " "))
-(def cell-height (backend/font-line-height monospaced))
+(defonce toolkit
+  (if-let [tk (resolve 'membrane.skia/toolkit)]
+    @tk
+    @(requiring-resolve 'membrane.java2d/toolkit)))
+
+(def monospaced
+  (if (tk/font-exists? toolkit (ui/font "Menlo" 11))
+    (ui/font "Menlo" 11)
+    (ui/font "monospaced" 11)))
+(def cell-width
+  (tk/font-advance-x toolkit monospaced " "))
+(def cell-height
+  (tk/font-line-height toolkit monospaced))
 
 (defn indent [n]
   (ui/spacer (* n cell-width) 0))
@@ -65,6 +74,7 @@
       (integer? obj) :integer
       (float? obj) :float
       (double? obj) :double
+      (ratio? obj) :ratio
       (char? obj) :char
       (map-entry? obj) :map-entry
       (map? obj) :map
@@ -79,6 +89,8 @@
       (coll? obj) :collection
       (seqable? obj) :seqable
       (instance? clojure.lang.IDeref obj) :deref
+      (instance? APWrapped obj) :pwrapped
+      (fn? obj) :fn
       :else :object)))
 
 
@@ -130,7 +142,9 @@
   [{:keys [obj width height]}]
   (let [[left right] (split-ratio width 1/3)]
     (ui/horizontal-layout
-     (ilabel (inspector-dispatch {:obj obj})
+     (ilabel (inspector-dispatch {:obj obj
+                                  :width width
+                                  :height height})
              left)
      (ilabel (type obj)
              right))))
@@ -187,38 +201,53 @@
                    width (- width
                             (count open)
                             (count close))
-                   obj (seq obj)]
-              (if (or (not obj)
-                      (<= width 0))
-                body
-                (let [x (first obj)
-                      child-path (if (map-entry? x)
-                                   (list 'find (key x))
-                                   (list 'nth i))
-                      path (conj path
-                                 child-path)
-                      elem
-                      (wrap-highlight
-                       path
-                       highlight-path
-                       (wrap-selection
-                        x
-                        path
-                        (inspector* {:obj x
-                                     :height 1
-                                     :highlight-path highlight-path
-                                     :path path
-                                     :width width})))
-                      pix-width (ui/width elem)
-                      elem-width (int (Math/ceil (/ pix-width
-                                                    cell-width)))]
-                  (recur (conj body elem)
-                         (inc i)
-                         (- width elem-width
-                            ;; add a space between elements
-                            1
-                            )
-                         (next obj)))))]
+                   ;; lazy sequences can throw here
+                   obj (try
+                         (seq obj)
+                         (catch Exception e
+                           e))]
+              (if (instance? Exception obj)
+                (conj body
+                      (inspector* {:obj obj
+                                   :height height
+                                   :width width
+                                   :highlight-path highlight-path
+                                   :path path}))
+                (if (or (not obj)
+                        (<= width 0))
+                  body
+                  (let [x (first obj)
+                        child-path (if (map-entry? x)
+                                     (list 'find (key x))
+                                     (list 'nth i))
+                        path (conj path
+                                   child-path)
+                        elem
+                        (wrap-highlight
+                         path
+                         highlight-path
+                         (wrap-selection
+                          x
+                          path
+                          (inspector* {:obj x
+                                       :height 1
+                                       :highlight-path highlight-path
+                                       :path path
+                                       :width width})))
+                        pix-width (ui/width elem)
+                        elem-width (int (Math/ceil (/ pix-width
+                                                      cell-width)))]
+                    (recur (conj body elem)
+                           (inc i)
+                           (- width elem-width
+                              ;; add a space between elements
+                              1
+                              )
+                           ;; lazy sequences can throw here
+                           (try
+                             (next obj)
+                             (catch Exception e
+                               e)))))))]
         (when (pos? (count body))
           (ui/horizontal-layout
            (ui/with-color (:bracket colors)
@@ -226,10 +255,13 @@
            (apply ui/horizontal-layout
                   (interpose (indent 1)
                              body))
-           (when (= (count body)
-                    (bounded-count (inc (count body)) obj ))
-            (ui/with-color (:bracket colors)
-              (ilabel close (count close)))))))))
+           (let [len (try
+                       (bounded-count (inc (count body)) obj)
+                       (catch Exception e
+                         nil))]
+             (when (= (count body) len)
+              (ui/with-color (:bracket colors)
+                (ilabel close (count close))))))))))
   )
 
 (def chunk-size 32)
@@ -244,64 +276,109 @@
   (let [offset (or offset 0)]
     (if (<= height 3)
       (inspector-seq-horizontal m)
-      (let [obj (if (pos? offset)
-                  (drop offset obj)
-                  obj)
-            heights (split-evenly (- height 3)
-                                  (min chunk-size (bounded-count (inc chunk-size) obj)))
-            children (->> obj
-                          (map (fn [i height obj]
-                                 (let [child-path (if (map-entry? obj)
-                                                    (list 'find (key obj))
-                                                    (list 'nth i))
-                                       path (conj path
-                                                  child-path)
-                                       body
-                                       (wrap-highlight
-                                        path
-                                        highlight-path
-                                        (wrap-selection obj
-                                                        path
-                                                        (inspector* {:obj obj
-                                                                     :height height
-                                                                     :path path
-                                                                     :highlight-path highlight-path
-                                                                     :width (dec width)})))]
-                                   (if (= path highlight-path)
-                                     (ui/fill-bordered [0.2 0.2 0.2 0.1]
-                                                       0
-                                                       body)
-                                     body)))
-                               (range)
-                               heights)
-                          (apply ui/vertical-layout))]
-        (ui/vertical-layout
-         (ui/with-color (:bracket colors)
-           (ilabel open width))
-         (ui/translate cell-width 0
-                       (ui/vertical-layout
-                        (when (pos? offset)
-                          (ui/on
-                           :mouse-down
-                           (fn [_]
-                             ;; only for top level
-                             (when (empty? path)
-                               [[::previous-chunk]]))
-                           (ilabel "..." 3)))
-                        children
-                        (let [len (bounded-count (inc chunk-size) obj)]
-                         (when (or (> len chunk-size)
-                                   (< (count heights)
-                                      (bounded-count (inc chunk-size) obj)))
-                           (ui/on
-                            :mouse-down
-                            (fn [_]
-                              ;; only for top level
-                              (when (empty? path)
-                                [[::next-chunk (min (count heights) chunk-size)]]))
-                            (ilabel "..." 3))))))
-         (ui/with-color (:bracket colors)
-           (ilabel close width)))))))
+      (let [;; realize elements
+            ;; lazy sequences can throw errors here
+            chunk (try
+                    (loop [obj (seq (if (pos? offset)
+                                      (drop offset obj)
+                                      obj))
+                           chunk []]
+                      (if (or (not obj)
+                              (>= (count chunk)
+                                  chunk-size))
+                        chunk
+                        (let [x (first obj)]
+                          (let [next-obj
+                                ;; lazy sequences can throw here
+                                (try
+                                  (next obj)
+                                  (catch Exception e
+                                    e))]
+                            (if (instance? Exception next-obj)
+                              (conj chunk next-obj)
+                              (recur next-obj
+                                     (conj chunk x)))))))
+                    (catch Exception e
+                      e))
+
+            children
+            (if (instance? Exception chunk)
+              (inspector* {:obj chunk
+                           :height height
+                           :width width
+                           :highlight-path highlight-path
+                           :path path})
+              (let [heights (split-evenly (- height 3)
+                                          (count chunk))]
+                (->> chunk
+                     (map (fn [i height obj]
+                            (let [child-path (if (map-entry? obj)
+                                               (list 'find (key obj))
+                                               (list 'nth i))
+                                  path (conj path
+                                             child-path)
+                                  body
+                                  (wrap-highlight
+                                   path
+                                   highlight-path
+                                   (wrap-selection obj
+                                                   path
+                                                   (inspector* {:obj obj
+                                                                :height height
+                                                                :path path
+                                                                :highlight-path highlight-path
+                                                                :width (dec width)})))]
+                              (if (= path highlight-path)
+                                (ui/fill-bordered [0.2 0.2 0.2 0.1]
+                                                  0
+                                                  body)
+                                body)))
+                          (range)
+                          heights)
+                     (apply ui/vertical-layout))))]
+        (cond
+          (instance? Exception chunk)
+          children
+
+          (empty? chunk)
+          (ui/with-color (:bracket colors)
+            (ilabel (str open close) width))
+
+          ;; else not empty
+          :else
+          (ui/vertical-layout
+           (ui/with-color (:bracket colors)
+             (ilabel open width))
+           (ui/translate cell-width 0
+                         (ui/vertical-layout
+                          (when (pos? offset)
+                            (ui/on
+                             :mouse-down
+                             (fn [_]
+                               ;; only for top level
+                               (when (empty? path)
+                                 [[::previous-chunk]]))
+                             (ilabel "..." 3)))
+                          children
+                          ;; lazy sequences can throw here
+                          (let [len (try
+                                      (bounded-count (inc chunk-size)
+                                                     (drop offset obj))
+                                      (catch Exception e
+                                        (println e)
+                                        nil))]
+                            (when (and len
+                                       (> len (count children)))
+                              (ui/on
+                               :mouse-down
+                               (fn [_]
+                                 ;; only for top level
+                                 (when (empty? path)
+                                   [[::next-chunk (count children)]]))
+                               (ilabel "..." 3))))
+                          ))
+           (ui/with-color (:bracket colors)
+             (ilabel close width))))))))
 
 
 (defmethod inspector* :vector
@@ -421,6 +498,39 @@
   [{:keys [obj width height] :as m}]
   (inspector-deref m))
 
+(defn inspector-pwrapped [{:keys [obj width height path highlight-path]}]
+  (let [[left right] (split-ratio (- width 2) 1/3)
+        k 'PWrapped
+        v (-unwrap obj)]
+    (ui/horizontal-layout
+     (indent 1)
+     (inspector* {:obj k
+                  :height height
+                  :width left})
+     (indent 1)
+     (let [child-path (conj path '(-unwrap))]
+       (wrap-highlight
+        child-path
+        highlight-path
+        (wrap-selection v
+                        child-path
+                        (inspector* {:obj v
+                                     :height height
+                                     :path child-path
+                                     :highlight-path highlight-path
+                                     :width right})))))))
+
+(defmethod inspector* :pwrapped
+  [{:keys [obj width height] :as m}]
+  (inspector-pwrapped m))
+
+(defn inspector-fn [{:keys [obj width height]}]
+  (ilabel "#function" width))
+
+(defmethod inspector* :fn
+  [{:keys [obj width height] :as m}]
+  (inspector-fn m))
+
 
 (defn inspector-symbol [{:keys [obj width height]}]
   (let [ns (namespace obj)
@@ -460,6 +570,13 @@
   [{:keys [obj width height] :as m}]
   (inspector-double m))
 
+(defn inspector-ratio [{:keys [obj width height]}]
+  (ui/with-color (:number colors)
+    (ilabel obj width)))
+(defmethod inspector* :ratio
+  [{:keys [obj width height] :as m}]
+  (inspector-ratio m))
+
 
 (defn inspector-char [{:keys [obj width height]}]
   (ui/with-color (:string colors)
@@ -485,67 +602,143 @@
   (inspector-nil m))
 
 
+(defui wrap-resizing [{:keys [resizing?
+                              width
+                              height
+                              body]}]
+  (if-not resizing?
+    body
+    (let [w (+  (* width cell-width))
+          h (+  (* height cell-height))
+          temp-width (get extra ::temp-width w)
+          temp-height (get extra ::temp-height h)]
+     (ui/on
+      :mouse-up
+      (fn [_]
+        [[:set $resizing? false]])
+      :mouse-move-global
+      (fn [[x y]]
+        [[:set $width (int (/ x  cell-width))]
+         [:set $height (int (/ y  cell-height))]
+         [:set $temp-width x]
+         [:set $temp-height y]])
+      (ui/no-events
+       [body
+        (ui/with-color [0.2 0.2 0.2 0.2]
+          (ui/with-style :membrane.ui/style-stroke
+            (ui/rectangle w h)))
+        (ui/spacer (+ temp-width 5)
+                   (+ temp-height 5))])))))
 
-(defui inspector [{:keys [obj width height stack path highlight-path offsets]}]
-  (let [stack (or stack [])
-        path (or path [])
-        offsets (or offsets [0])
-        offset (peek offsets)]
+(defui inspector [{:keys [obj width height show-context?]}]
+  (let [stack (get extra :stack [])
+        path (get extra :path [])
+        offsets (get extra :offsets [0])
+        offset (peek offsets)
+        specimen (get extra :specimen obj)
+        resizing? (get extra :resizing?)
+        highlight-path (get extra :highlight-path)]
+    (ui/vertical-layout
+     (when show-context?
+         (ui/vertical-layout
+          (basic/button {:text "pop"
+                         :on-click
+                         (fn []
+                           (when (seq stack)
+                             (let [{:keys [specimen path offsets]} (peek stack)]
+                               [[:set $specimen specimen]
+                                [:set $path path]
+                                [:set $offsets offsets]
+                                [:update $stack pop]])))})
+          (basic/button {:text "resizing"
+                         :on-click
+                         (fn []
+                           [[:set $resizing? true]])})
+          (ui/label (str "offset: " offset))
+          (ui/label (str "path: " (pr-str path) ))))
+     (wrap-resizing
+      {:resizing? resizing?
+       :width width
+       :height height
+       :body
+       (let [elem
+             (ui/on
+              ::highlight
+              (fn [path]
+                [[:set $highlight-path path]])
+              ::previous-chunk
+              (fn []
+                [[:update $offsets
+                  (fn [offsets]
+                    (if (> (count offsets) 1)
+                      (pop offsets)
+                      offsets))]])
+              ::next-chunk
+              (fn [delta]
+                [[:update $offsets
+                  (fn [offsets]
+                    (let [offset (peek offsets)]
+                      (conj offsets (+ offset delta))))]])
 
-    (ui/padding
-     4
-     (ui/vertical-layout
-      (basic/button {:text "pop"
-                     :on-click
-                     (fn []
-                       (when (seq stack)
-                         (let [{:keys [obj path offsets]} (peek stack)]
-                           [[:set $obj obj]
-                            [:set $path path]
-                            [:set $offsets offsets]
-                            [:update $stack pop]])))})
-      (ui/label (str "offset: " offset))
-      (ui/label (str "path: " (pr-str path) ))
-      (ui/on
-       ::highlight
-       (fn [path]
-         [[:set $highlight-path path]])
-       ::previous-chunk
-       (fn []
-         [[:update $offsets
-           (fn [offsets]
-             (if (> (count offsets) 1)
-               (pop offsets)
-               offsets))]])
-       ::next-chunk
-       (fn [delta]
-         [[:update $offsets
-           (fn [offsets]
-             (let [offset (peek offsets)]
-               (conj offsets (+ offset delta))))]])
-
-       ::select
-       (fn [x child-path]
-         [[:update $stack conj {:obj obj
-                                :path path
-                                :offsets offsets}]
-          [:delete $highlight-path]
-          [:update $path into child-path]
-          [:set $offsets [0]]
-          [:set $obj (wrap x)]])
-       (ui/wrap-on
-        :mouse-move
-        (fn [handler pos]
-          (let [intents (handler pos)]
-            (if (seq intents)
-              intents
-              [[:set $highlight-path nil]])))
-        (inspector* {:obj (-unwrap obj)
-                     :height height
-                     :path []
-                     :offset offset
-                     :highlight-path highlight-path
-                     :width width} )))))))
+              ::select
+              (fn [x child-path]
+                [[:update $stack conj {:specimen specimen
+                                       :path path
+                                       :offsets offsets}]
+                 [:delete $highlight-path]
+                 [:update $path into child-path]
+                 [:set $offsets [0]]
+                 [:set $specimen (wrap x)]])
+              (ui/wrap-on
+               :mouse-move
+               (fn [handler pos]
+                 (let [intents (handler pos)]
+                   (if (seq intents)
+                     intents
+                     [[:set $highlight-path nil]])))
+               (inspector* {:obj (-unwrap specimen)
+                            :height height
+                            :path []
+                            :offset offset
+                            :highlight-path highlight-path
+                            :width width} )))
+             [ew eh] (ui/bounds elem)
+             pop-button
+             (ui/on
+              :mouse-down
+              (fn [_]
+                (if (seq stack)
+                  (let [{:keys [specimen path offsets]} (peek stack)]
+                    [[:set $specimen specimen]
+                     [:set $path path]
+                     [:set $offsets offsets]
+                     [:update $stack pop]])
+                  [[:delete $specimen]
+                   [:delete $path]
+                   [:delete $offsets]
+                   [:delete $stack]]))
+              (ui/filled-rectangle [0 0 1 0.25]
+                                   8 8))
+             resize-button
+             (ui/on
+              :mouse-down
+              (fn [_]
+                [[:set $resizing? true]])
+              (ui/filled-rectangle [1 0 0 0.25]
+                                   8 8))
+             [rw rh] (ui/bounds resize-button)]
+         [(ui/translate (- (* width cell-width)
+                           rw)
+                        (- (* height cell-height)
+                           rh)
+                        resize-button)
+          (ui/translate (- (* width cell-width)
+                           (* 2 rw))
+                        (- (* height cell-height)
+                           rh)
+                        pop-button)
+          elem]
+         )}))))
 
 
 
@@ -554,14 +747,15 @@
 (defn inspect
   ([obj]
    (inspect obj {}))
-  ([obj {:keys [width height] :as opts}]
+  ([obj {:keys [width height show-context?] :as opts
+         :or {show-context? true}}]
    (let [width (or width 80)
          height (or height 40)
          app (component/make-app #'inspector
                                  {:obj (wrap obj)
                                   :width width
+                                  :show-context? show-context?
                                   :height height})
-         initial-view (app)
 
          [empty-width empty-height] (ui/bounds ((component/make-app #'inspector
                                                                     {:obj (wrap nil)
@@ -572,20 +766,25 @@
          window-height (+ empty-height
                           height
                           (* cell-height (inc height)))]
-     (backend/run app
+     (tk/run
+       toolkit
+       app
        {:window-title "Inspect"
         :window-start-width window-width
         :window-start-height window-height}))))
 
 
-(s/def ::anything any? )
+
 (comment
+  [clojure.spec.alpha :as s]
+  [clojure.spec.gen.alpha :as gen]
+  (s/def ::anything any? )
+  
   (do
     (def obj (gen/generate (s/gen ::anything) )
       )
     (inspect (gen/sample  (s/gen ::anything)
-                       100)
-          )
+                          100))
     obj)
 
   (backend/run #'inspector-test)
@@ -594,14 +793,17 @@
   
 (comment
   (require '[pl.danieljanus.tagsoup :as tagsoup])
+  (require '[clojure.data.json :as json])
 
-  (def data (tagsoup/parse-string (slurp "/Users/adrian/workspace/pretty-view/index.html") ))
+  (inspect (read-string (slurp "deps.edn")))
 
-  (inspect ((requiring-resolve 'pl.danieljanus.tagsoup/parse-string) (slurp "https://clojure.org/reference/reader")))
-
-  data
-  (inspect (json/read-str (slurp "https://raw.githubusercontent.com/dreadwarrior/ext-giftcertificates/5e447a7316aea57a372203f2aa8de5aef3af671a/ExtensionBuilder.json"))
+  (inspect ((requiring-resolve 'pl.danieljanus.tagsoup/parse-string) (slurp "https://clojure.org/reference/reader"))
            {:height 10})
+
+  (inspect (gen/generate (s/gen ::anything)))
+
+  (inspect (json/read-str (slurp "https://raw.githubusercontent.com/dreadwarrior/ext-giftcertificates/5e447a7316aea57a372203f2aa8de5aef3af671a/ExtensionBuilder.json")) )
+
   ,
 )
 
