@@ -1,4 +1,4 @@
-(ns com.phronemophobic.membrane.inspector
+(ns com.phronemophobic.viscous
   (:require
    [membrane.ui :as ui]
    [membrane.basic-components :as basic]
