@@ -4,7 +4,7 @@ An visual data inspector/explorer that runs in constant space, time, and screen 
 
 ![Overview](inspector.gif?raw=true)
 
-![Resizing](inspecotr-resize.gif?raw=true)
+![Resizing](inspector-resize.gif?raw=true)
 
 ## Dependency
 
