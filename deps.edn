@@ -1,9 +1,6 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        com.phronemophobic/membrane {:mvn/version "0.9.31.6-beta"}
-
-        com.github.davidmoten/rtree {:mvn/version "0.8.7"}
-        fipp/fipp {:mvn/version "0.6.23"}}
+        com.phronemophobic/membrane {:mvn/version "0.9.31.6-beta"}}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}}}
