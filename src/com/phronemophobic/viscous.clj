@@ -745,6 +745,7 @@
 
 
 (defn inspect
+  "Open an inspector window to view obj."
   ([obj]
    (inspect obj {}))
   ([obj {:keys [width height show-context?] :as opts
