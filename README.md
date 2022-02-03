@@ -6,6 +6,10 @@ A visual data inspector/explorer that runs in constant space, time, and screen s
 
 ![Resizing](inspector-resize.gif?raw=true)
 
+## Web Demo
+
+Try it! https://phronmophobic.github.io/viscous/
+
 ## Dependency
 
 ```clojure
