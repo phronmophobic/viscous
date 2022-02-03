@@ -91,6 +91,7 @@
       (instance? clojure.lang.IDeref obj) :deref
       (instance? APWrapped obj) :pwrapped
       (fn? obj) :fn
+      (instance? Throwable obj) :throwable
       :else :object)))
 
 
@@ -148,6 +149,10 @@
              left)
      (ilabel (type obj)
              right))))
+
+(defmethod inspector* :throwable
+  [m]
+  (inspector* (update m :obj Throwable->map)))
 
 (defmethod inspector* :no-space
   [{:keys [obj width height]}]
