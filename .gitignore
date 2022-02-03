@@ -13,3 +13,7 @@
 /.socket-repl-port
 .hgignore
 .hg/
+out
+node_modules
+.shadow-cljs
+public/js

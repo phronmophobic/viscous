@@ -1,0 +1,15 @@
+;; shadow-cljs configuration
+{
+ :deps {:aliases [:cljs]}
+ :builds {:app {
+                :modules {:main {:init-fn com.phronemophobic.viscous.demo/-main}}
+                ;; :asset-path "js/compiled/out.webgltest"
+                ;; :output-to "resources/public/js/compiled/webgltest.js"
+                ;; :output-dir "resources/public/js/compiled/out.webgltest"
+                :target :browser
+                ;; :compiler-options
+                ;; {
+                ;;  :source-map-timestamp true
+                ;;  ;;:optimizations :whitespace
+                ;;  }
+                }}}

@@ -1,9 +1,18 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        com.phronemophobic/membrane {:mvn/version "0.9.31.6-beta"}}
+        com.phronemophobic/membrane {:mvn/version "0.9.31.8-beta"
+                                     ;; :local/root "../membrane2"
+                                     }}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}}}
+
+  :cljs
+  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.16.12"}}}
+
+  :shadow-cljs
+  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.16.12"}}
+   :main-opts ["-m" "shadow.cljs.devtools.cli"]}
 
   :project
   {:extra-deps {org.clojure/data.json {:mvn/version "2.4.0"}

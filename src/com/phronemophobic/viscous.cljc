@@ -4,15 +4,45 @@
    [membrane.basic-components :as basic]
    [membrane.toolkit :as tk]
    [membrane.component :refer [defui defeffect]
-    :as component]
-   [clojure.zip :as z]))
+    :as component]))
+
+(defonce toolkit
+  #?(:clj
+     (if-let [tk (resolve 'membrane.skia/toolkit)]
+       @tk
+       @(requiring-resolve 'membrane.java2d/toolkit))
+     :cljs
+     nil))
+
+(do
+  #?@
+  (:cljs
+   [(def monospaced (ui/font "Ubuntu Mono"
+                             nil
+                             ))
+    (def cell-width)
+    (def cell-height)]
+
+   :clj
+   [(def monospaced
+      (if (tk/font-exists? toolkit (ui/font "Menlo" 11))
+        (ui/font "Menlo" 11)
+        (ui/font "monospaced" 11)))
+    (def cell-width
+      (tk/font-advance-x toolkit monospaced " "))
+    (def cell-height
+      (tk/font-line-height toolkit monospaced))]))
+
+
 
 (defprotocol PWrapped
   (-unwrap [this]))
 
 (deftype APWrapped [obj]
-  Object
-  (hashCode [_] (System/identityHashCode obj))
+  #?@(:clj
+      [Object
+       (hashCode [_] (System/identityHashCode obj))])
+
   PWrapped
   (-unwrap [_]
     obj))
@@ -48,19 +78,7 @@
    [0.3333333432674408 0.3333333432674408 0.3333333432674408],
    :variable-2 [0.0 0.3333333432674408 0.6666666865348816]})
 
-(defonce toolkit
-  (if-let [tk (resolve 'membrane.skia/toolkit)]
-    @tk
-    @(requiring-resolve 'membrane.java2d/toolkit)))
 
-(def monospaced
-  (if (tk/font-exists? toolkit (ui/font "Menlo" 11))
-    (ui/font "Menlo" 11)
-    (ui/font "monospaced" 11)))
-(def cell-width
-  (tk/font-advance-x toolkit monospaced " "))
-(def cell-height
-  (tk/font-line-height toolkit monospaced))
 
 (defn indent [n]
   (ui/spacer (* n cell-width) 0))
@@ -74,7 +92,7 @@
       (integer? obj) :integer
       (float? obj) :float
       (double? obj) :double
-      (ratio? obj) :ratio
+      #?@(:clj [(ratio? obj) :ratio])
       (char? obj) :char
       (map-entry? obj) :map-entry
       (map? obj) :map
@@ -88,10 +106,10 @@
 
       (coll? obj) :collection
       (seqable? obj) :seqable
-      (instance? clojure.lang.IDeref obj) :deref
+      #?@(:clj [(instance? clojure.lang.IDeref obj) :deref])
       (instance? APWrapped obj) :pwrapped
       (fn? obj) :fn
-      (instance? Throwable obj) :throwable
+      #?@(:clj [(instance? Throwable obj) :throwable])
       :else :object)))
 
 
@@ -139,9 +157,10 @@
         right (- width left)]
     [left right]))
 
+(def one-third (/ 1 3))
 (defmethod inspector* :default
   [{:keys [obj width height]}]
-  (let [[left right] (split-ratio width 1/3)]
+  (let [[left right] (split-ratio width one-third)]
     (ui/horizontal-layout
      (ilabel (inspector-dispatch {:obj obj
                                   :width width
@@ -150,9 +169,10 @@
      (ilabel (type obj)
              right))))
 
-(defmethod inspector* :throwable
-  [m]
-  (inspector* (update m :obj Throwable->map)))
+#?(:clj
+   (defmethod inspector* :throwable
+     [m]
+     (inspector* (update m :obj Throwable->map))))
 
 (defmethod inspector* :no-space
   [{:keys [obj width height]}]
@@ -209,9 +229,9 @@
                    ;; lazy sequences can throw here
                    obj (try
                          (seq obj)
-                         (catch Exception e
+                         (catch #?(:clj Exception :cljs js/Error) e
                            e))]
-              (if (instance? Exception obj)
+              (if (instance? #?(:clj Exception :cljs js/Error) obj)
                 (conj body
                       (inspector* {:obj obj
                                    :height height
@@ -251,7 +271,7 @@
                            ;; lazy sequences can throw here
                            (try
                              (next obj)
-                             (catch Exception e
+                             (catch #?(:clj Exception :cljs js/Error) e
                                e)))))))]
         (when (pos? (count body))
           (ui/horizontal-layout
@@ -262,7 +282,7 @@
                              body))
            (let [len (try
                        (bounded-count (inc (count body)) obj)
-                       (catch Exception e
+                       (catch #?(:clj Exception :cljs js/Error) e
                          nil))]
              (when (= (count body) len)
               (ui/with-color (:bracket colors)
@@ -297,17 +317,17 @@
                                 ;; lazy sequences can throw here
                                 (try
                                   (next obj)
-                                  (catch Exception e
+                                  (catch #?(:clj Exception :cljs js/Error) e
                                     e))]
-                            (if (instance? Exception next-obj)
+                            (if (instance? #?(:clj Exception :cljs js/Error) next-obj)
                               (conj chunk next-obj)
                               (recur next-obj
                                      (conj chunk x)))))))
-                    (catch Exception e
+                    (catch #?(:clj Exception :cljs js/Error) e
                       e))
 
             children
-            (if (instance? Exception chunk)
+            (if (instance? #?(:clj Exception :cljs js/Error) chunk)
               (inspector* {:obj chunk
                            :height height
                            :width width
@@ -342,7 +362,7 @@
                           heights)
                      (apply ui/vertical-layout))))]
         (cond
-          (instance? Exception chunk)
+          (instance? #?(:clj Exception :cljs js/Error) chunk)
           children
 
           (empty? chunk)
@@ -369,7 +389,7 @@
                           (let [len (try
                                       (bounded-count (inc chunk-size)
                                                      (drop offset obj))
-                                      (catch Exception e
+                                      (catch #?(:clj Exception :cljs js/Error) e
                                         (println e)
                                         nil))]
                             (when (and len
@@ -428,7 +448,7 @@
 (defn inspector-keyword [{:keys [obj width height]}]
   (let [ns (namespace obj)
         [left right] (if ns
-                       (split-ratio (- width 2) 1/3)
+                       (split-ratio (- width 2) one-third)
                        [0 (- width 1)])]
     (ui/with-color (:keyword colors)
       (ui/horizontal-layout
@@ -444,7 +464,7 @@
 
 
 (defn inspector-map-entry [{:keys [obj width height path highlight-path]}]
-  (let [[left right] (split-ratio (- width 2) 1/3)
+  (let [[left right] (split-ratio (- width 2) one-third)
         [k v] obj]
     (ui/horizontal-layout
      (let [child-path (conj path '(key))]
@@ -474,37 +494,42 @@
   [{:keys [obj width height] :as m}]
   (inspector-map-entry m))
 
-(defn inspector-deref [{:keys [obj width height path highlight-path]}]
-  (let [[left right] (split-ratio (- width 2) 1/3)
-        k (symbol (.getName (class obj)))
-        v (if (instance? clojure.lang.IPending obj)
-            (if (realized? obj)
-              @obj
-              "unrealized?")
-            (deref obj))]
-    (ui/horizontal-layout
-     (indent 1)
-     (inspector* {:obj k
-                  :height height
-                  :width left})
-     (indent 1)
-     (let [child-path (conj path '(deref))]
-       (wrap-highlight
-        child-path
-        highlight-path
-        (wrap-selection v
-                        child-path
-                        (inspector* {:obj v
-                                     :height height
-                                     :path child-path
-                                     :highlight-path highlight-path
-                                     :width right})))))))
-(defmethod inspector* :deref
-  [{:keys [obj width height] :as m}]
-  (inspector-deref m))
+
+#?
+(:clj
+ (defn inspector-deref [{:keys [obj width height path highlight-path]}]
+   (let [[left right] (split-ratio (- width 2) one-third)
+         k (symbol (.getName (class obj)))
+         v (if (instance? clojure.lang.IPending obj)
+             (if (realized? obj)
+               @obj
+               "unrealized?")
+             (deref obj))]
+     (ui/horizontal-layout
+      (indent 1)
+      (inspector* {:obj k
+                   :height height
+                   :width left})
+      (indent 1)
+      (let [child-path (conj path '(deref))]
+        (wrap-highlight
+         child-path
+         highlight-path
+         (wrap-selection v
+                         child-path
+                         (inspector* {:obj v
+                                      :height height
+                                      :path child-path
+                                      :highlight-path highlight-path
+                                      :width right}))))))))
+#?
+(:clj
+ (defmethod inspector* :deref
+   [{:keys [obj width height] :as m}]
+   (inspector-deref m)))
 
 (defn inspector-pwrapped [{:keys [obj width height path highlight-path]}]
-  (let [[left right] (split-ratio (- width 2) 1/3)
+  (let [[left right] (split-ratio (- width 2) one-third)
         k 'PWrapped
         v (-unwrap obj)]
     (ui/horizontal-layout
@@ -540,7 +565,7 @@
 (defn inspector-symbol [{:keys [obj width height]}]
   (let [ns (namespace obj)
         [left right] (if ns
-                       (split-ratio (- width 1) 1/3)
+                       (split-ratio (- width 1) one-third)
                        [0 width])]
     (ui/with-color (:qualifier colors)
       (ui/horizontal-layout
@@ -819,3 +844,4 @@
   (reset! a b)
   (inspect a)
   ,)
+
