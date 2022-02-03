@@ -326,6 +326,23 @@
                     (catch #?(:clj Exception :cljs js/Error) e
                       e))
 
+            has-previous? (pos? offset)
+            has-next? (let [len
+                            ;; lazy sequences can throw here
+                            (try
+                              (bounded-count (inc chunk-size)
+                                             (drop offset obj))
+                              (catch #?(:clj Exception :cljs js/Error) e
+                                (println e)
+                                nil))]
+                        (and len
+                             (> len (- height
+                                       ;; open and close
+                                       2
+                                       (if has-previous?
+                                         1
+                                         0)))))
+
             children
             (if (instance? #?(:clj Exception :cljs js/Error) chunk)
               (inspector* {:obj chunk
@@ -333,8 +350,15 @@
                            :width width
                            :highlight-path highlight-path
                            :path path})
-              (let [heights (split-evenly (- height 3)
-                                          (count chunk))]
+              (let [heights (split-evenly
+                             ;; space for children is
+                             (- height
+                                ;; open and close
+                                2
+                                (if has-previous? 1 0)
+                                (if has-next? 1 0)
+                                )
+                             (count chunk))]
                 (->> chunk
                      (map (fn [i height obj]
                             (let [child-path (if (map-entry? obj)
@@ -376,7 +400,7 @@
              (ilabel open width))
            (ui/translate cell-width 0
                          (ui/vertical-layout
-                          (when (pos? offset)
+                          (when has-previous?
                             (ui/on
                              :mouse-down
                              (fn [_]
@@ -385,22 +409,14 @@
                                  [[::previous-chunk]]))
                              (ilabel "..." 3)))
                           children
-                          ;; lazy sequences can throw here
-                          (let [len (try
-                                      (bounded-count (inc chunk-size)
-                                                     (drop offset obj))
-                                      (catch #?(:clj Exception :cljs js/Error) e
-                                        (println e)
-                                        nil))]
-                            (when (and len
-                                       (> len (count children)))
-                              (ui/on
-                               :mouse-down
-                               (fn [_]
-                                 ;; only for top level
-                                 (when (empty? path)
-                                   [[::next-chunk (count children)]]))
-                               (ilabel "..." 3))))
+                          (when has-next?
+                            (ui/on
+                             :mouse-down
+                             (fn [_]
+                               ;; only for top level
+                               (when (empty? path)
+                                 [[::next-chunk (count children)]]))
+                             (ilabel "..." 3)))
                           ))
            (ui/with-color (:bracket colors)
              (ilabel close width))))))))
