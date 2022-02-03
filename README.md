@@ -9,7 +9,7 @@ A visual data inspector/explorer that runs in constant space, time, and screen s
 ## Dependency
 
 ```clojure
-com.phronemophobic/viscous {:git/sha "5d07ec56d39c38beecbf2f5da0ff0d99980acfc7"
+com.phronemophobic/viscous {:git/sha "31f088fe2c76ee9950e3b2e19200222ee59f0dd3"
                             :git/url "https://github.com/phronmophobic/viscous"}
 ```
 
