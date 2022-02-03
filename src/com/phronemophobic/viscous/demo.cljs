@@ -90,7 +90,7 @@
   (webgl/load-font
    (:name viscous/monospaced)
    "https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap"
-   "http://fonts.gstatic.com/s/ubuntumono/v6/EgeuS9OtEmA0y_JRo03MQaCWcynf_cDxXwCLxiixG1c.ttf"
+   "https://fonts.gstatic.com/s/ubuntumono/v6/EgeuS9OtEmA0y_JRo03MQaCWcynf_cDxXwCLxiixG1c.ttf"
 
    (fn []
      (let [freetype-font (webgl/get-font viscous/monospaced)
