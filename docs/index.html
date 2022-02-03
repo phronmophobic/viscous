@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="icon" href="favicon.ico">
+    <title>Viscous Demo</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="blog.css" rel="stylesheet">
+
+
+  </head>
+  <body>
+    <div class="blog-masthead">
+      <div class="container">
+        <nav class="nav blog-nav">
+          <a class="nav-link" href="javascript:void(0);"></a>
+        </nav>
+      </div>
+    </div>
+
+    <div class="blog-header">
+      <div class="container">
+        <h1 class="blog-title">Viscous Demo</h1>
+        <p class="lead blog-description">A visual data inspector/explorer that runs in constant space, time, and screen space.</p>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="row">
+
+        <div class="col-sm-8 blog-main">
+          
+
+          <h2>Load Data</h2>
+
+          <hr/>
+
+          <div class="form-group row">
+            <label for="url-input" >Fetch edn or json via URL</label>
+
+            <input class="form-control form-control-sm" placeholder="url to edn or json" id="url-input" type="text" value="" />
+
+          </div>
+          <div class="form-group row">
+            <button class="btn btn-primary mb-2  btn-sm" id="fetch-btn">Fetch</button>
+          </div>
+
+          <div class="form-group row">
+            <label for="fetch-example-select">Fetch example data</label>
+            <select class="form-control" id="fetch-example-select">
+              <option value="https://raw.githubusercontent.com/t-mon/selffinding-chronicles/cb24e067579ba755c26ef642b24f9d2a8d3b45b9/gamedata/savegames/test-savegame.json">rpg save game</option>
+              <option value="https://raw.githubusercontent.com/dreadwarrior/ext-giftcertificates/5e447a7316aea57a372203f2aa8de5aef3af671a/ExtensionBuilder.json">Extension Builder</option>
+              <option value="https://raw.githubusercontent.com/maxemiliang/atom-config-from-laptop/b588fb5f4516265188b7d21bed1377654d818650/.apm/registry.npmjs.org/property-accessors/.cache.json">npm package</option>
+              <option value="https://raw.githubusercontent.com/starwarskidfan/test-again/d73e797a3c9834cdb330e0930bb1ed5cd2a55ca2/GIT%20Test/Themes.json">Themes description</option>
+            </select>
+          </div>
+          <div class="form-group row">
+            <button class="btn btn-primary mb-2  btn-sm" id="fetch-example-btn">Fetch</button>
+          </div>
+
+
+          <div class="form-group">
+            <label for="exampleFormControlTextarea1">Load from text input</label>
+            <textarea class="form-control" id="blobarea">{"A":[0,1,2],"B":[0,1,2,3],"C":[0,1,2,3,4]}</textarea>
+            
+          </div>
+          <div class="form-group row">
+            <button class="btn btn-primary mb-2  btn-sm" id="update-btn">Load</button>
+
+          </div>
+
+          <hr/>
+          <h2>Viscous</h2>
+
+            <div id="app" >
+              <canvas width="1200" height="800" id="canvas" tabindex="1"></canvas>
+            </div>
+
+        </div><!-- /.blog-main -->
+      </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <!-- <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script> -->
+    <!-- <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script> -->
+    <!-- <script src="js/bootstrap.min.js"></script> -->
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <!-- <script src="js/ie10-viewport-bug-workaround.js"></script> -->
+
+
+    <script src="js/main.js" type="text/javascript"></script>
+  </body>
+</html>
