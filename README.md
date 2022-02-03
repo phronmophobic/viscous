@@ -8,7 +8,7 @@ A visual data inspector/explorer that runs in constant space, time, and screen s
 
 ## Web Demo
 
-https://phronmophobic.github.io/viscous/
+Try it! https://phronmophobic.github.io/viscous/
 
 ## Dependency
 
