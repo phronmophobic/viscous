@@ -1,6 +1,6 @@
 # Viscous
 
-An visual data inspector/explorer that runs in constant space, time, and screen space.
+A visual data inspector/explorer that runs in constant space, time, and screen space.
 
 ![Overview](inspector.gif?raw=true)
 
@@ -17,7 +17,6 @@ com.phronemophobic/viscous {:git/sha "5d07ec56d39c38beecbf2f5da0ff0d99980acfc7"
 
 ```clojure
 (require '[com.phronemophobic.viscous :as viscous])
-
 
 (def my-data {:a {:b 42}})
 
