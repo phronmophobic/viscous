@@ -336,12 +336,13 @@
                                 (println e)
                                 nil))]
                         (and len
-                             (> len (- height
-                                       ;; open and close
-                                       2
-                                       (if has-previous?
-                                         1
-                                         0)))))
+                             (or (> len chunk-size)
+                                 (> len (- height
+                                           ;; open and close
+                                           2
+                                           (if has-previous?
+                                             1
+                                             0))))))
 
             children
             (if (instance? #?(:clj Exception :cljs js/Error) chunk)
