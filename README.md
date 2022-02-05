@@ -13,7 +13,7 @@ A visual data inspector/explorer that runs in constant space, time, and screen s
 ![Paging](paging.gif?raw=true)
 
 ### Navigating
-![Navigating](navigating.gif?raw=true)
+![Navigating](navigation.gif?raw=true)
 
 ## Web Demo
 
