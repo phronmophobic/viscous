@@ -45,7 +45,7 @@
     (catch js/Object edn-error
       (prn edn-error)
       (try
-        [nil (js->clj (js/JSON.parse s))]
+        [nil (js/JSON.parse s)]
         (catch js/Object json-error
           (prn json-error)
           [[edn-error json-error]

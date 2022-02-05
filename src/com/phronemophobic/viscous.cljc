@@ -3,6 +3,7 @@
    [membrane.ui :as ui]
    [membrane.basic-components :as basic]
    [membrane.toolkit :as tk]
+   #?(:cljs goog.object)
    [membrane.component :refer [defui defeffect]
     :as component]))
 
@@ -461,6 +462,19 @@
                         :open "{"
                         :close "}"))
   )
+
+(defn ->map-entry [obj k]
+  (MapEntry. k (goog.object/get obj k) nil))
+
+#?
+(:cljs
+ (defmethod inspector* :object
+   [{:keys [obj width height] :as m}]
+   (inspector-seq (assoc m
+                         :obj (map #(->map-entry obj %) (js-keys obj))
+                         :open "{"
+                         :close "}"))))
+
 
 (defn inspector-keyword [{:keys [obj width height]}]
   (let [ns (namespace obj)
