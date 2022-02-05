@@ -2,9 +2,18 @@
 
 A visual data inspector/explorer that runs in constant space, time, and screen space.
 
+### Overview
+
 ![Overview](inspector.gif?raw=true)
 
+### Resizing
 ![Resizing](inspector-resize.gif?raw=true)
+
+### Paging
+![Paging](paging.gif?raw=true)
+
+### Navigating
+![Navigating](navigating.gif?raw=true)
 
 ## Web Demo
 
