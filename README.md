@@ -40,7 +40,7 @@ com.phronemophobic/viscous {:git/sha "d7ff3aeb4d104c324af51d526ba904684ca6da87"
 
 ## Status
 
-Viscous is still pretty alpha. Behavior is subject to change. Feedback is welcome.
+Viscous is in beta. Behavior is subject to change. Feedback is welcome.
 
 ## Related
 
