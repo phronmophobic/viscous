@@ -463,8 +463,10 @@
                         :close "}"))
   )
 
-(defn ->map-entry [obj k]
-  (MapEntry. k (goog.object/get obj k) nil))
+#?
+(:cljs
+ (defn ->map-entry [obj k]
+   (MapEntry. k (goog.object/get obj k) nil)))
 
 #?
 (:cljs
