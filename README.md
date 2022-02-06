@@ -22,7 +22,7 @@ Try it! https://phronmophobic.github.io/viscous/
 ## Dependency
 
 ```clojure
-com.phronemophobic/viscous {:git/sha "d7ff3aeb4d104c324af51d526ba904684ca6da87"
+com.phronemophobic/viscous {:git/sha "a42ea1c016d7aee779f43423df43f5726c582242"
                             :git/url "https://github.com/phronmophobic/viscous"}
 ```
 
