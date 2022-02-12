@@ -108,7 +108,7 @@
       (coll? obj) :collection
       (seqable? obj) :seqable
       #?@(:clj [(instance? clojure.lang.IDeref obj) :deref])
-      (instance? APWrapped obj) :pwrapped
+      (satisfies? PWrapped obj) :pwrapped
       (fn? obj) :fn
       #?@(:clj [(instance? Throwable obj) :throwable])
       :else :object)))
