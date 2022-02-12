@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.phronemophobic</groupId>
   <artifactId>viscous</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>1.1</version>
   <name>com.phronemophobic/viscous</name>
   <description>FIXME: my new library.</description>
   <url>https://github.com/com.phronemophobic/viscous</url>
@@ -22,7 +22,7 @@
     <url>https://github.com/com.phronemophobic/viscous</url>
     <connection>scm:git:git://github.com/com.phronemophobic/viscous.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/com.phronemophobic/viscous.git</developerConnection>
-    <tag>v0.1.0-SNAPSHOT</tag>
+    <tag>v1.1</tag>
   </scm>
   <dependencies>
     <dependency>
@@ -33,17 +33,7 @@
     <dependency>
       <groupId>com.phronemophobic</groupId>
       <artifactId>membrane</artifactId>
-      <version>0.9.25-beta</version>
-    </dependency>
-    <dependency>
-      <groupId>com.github.davidmoten</groupId>
-      <artifactId>rtree</artifactId>
-      <version>0.8.7</version>
-    </dependency>
-    <dependency>
-      <groupId>fipp</groupId>
-      <artifactId>fipp</artifactId>
-      <version>0.6.23</version>
+      <version>0.9.31.8-beta</version>
     </dependency>
   </dependencies>
   <build>
