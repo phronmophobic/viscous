@@ -21,10 +21,12 @@ Try it! https://phronmophobic.github.io/viscous/
 
 ## Dependency
 
+#### deps.edn
 ```clojure
 com.phronemophobic/viscous {:mvn/version "1.1"}
 ```
 
+#### lein
 ```clojure
 [com.phronemophobic/viscous "1.1"]
 ```
