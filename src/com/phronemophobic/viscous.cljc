@@ -694,31 +694,31 @@
                    (+ temp-height 5))])))))
 
 (defui inspector [{:keys [obj width height show-context?]}]
-  (let [stack (get extra :stack [])
-        path (get extra :path [])
-        offsets (get extra :offsets [0])
+  (let [stack (get extra [obj :stack] [])
+        path (get extra [obj :path] [])
+        offsets (get extra [obj :offsets] [0])
         offset (peek offsets)
-        specimen (get extra :specimen obj)
+        specimen (get extra [obj :specimen] obj)
         resizing? (get extra :resizing?)
-        highlight-path (get extra :highlight-path)]
+        highlight-path (get extra [obj :highlight-path])]
     (ui/vertical-layout
      (when show-context?
-         (ui/vertical-layout
-          (basic/button {:text "pop"
-                         :on-click
-                         (fn []
-                           (when (seq stack)
-                             (let [{:keys [specimen path offsets]} (peek stack)]
-                               [[:set $specimen specimen]
-                                [:set $path path]
-                                [:set $offsets offsets]
-                                [:update $stack pop]])))})
-          (basic/button {:text "resizing"
-                         :on-click
-                         (fn []
-                           [[:set $resizing? true]])})
-          (ui/label (str "offset: " offset))
-          (ui/label (str "path: " (pr-str path) ))))
+       (ui/vertical-layout
+        (basic/button {:text "pop"
+                       :on-click
+                       (fn []
+                         (when (seq stack)
+                           (let [{:keys [specimen path offsets]} (peek stack)]
+                             [[:set $specimen specimen]
+                              [:set $path path]
+                              [:set $offsets offsets]
+                              [:update $stack pop]])))})
+        (basic/button {:text "resizing"
+                       :on-click
+                       (fn []
+                         [[:set $resizing? true]])})
+        (ui/label (str "offset: " offset))
+        (ui/label (str "path: " (pr-str path) ))))
      (wrap-resizing
       {:resizing? resizing?
        :width width
