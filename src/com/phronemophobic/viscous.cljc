@@ -182,8 +182,28 @@
 (defmethod inspector* :string
   [{:keys [obj width height]}]
   (ui/with-color (:string colors)
-    (ilabel (pr-str obj)
-            width)))
+    (let [s obj
+          len (count s)
+          shortened
+          (when (pos? len)
+            (if (<= len (- width 2))
+              s
+              (case width
+                0 nil
+
+                1 "\""
+
+                (2 3) (str "\"" (subs s 0 (dec width)))
+
+                4 "\"..."
+
+                ;; else
+                (str "\""
+                     (subs s 0 (max 0
+                                    (- width 4)))
+                      "..."))))]
+      (when shortened
+        (ui/label shortened monospaced)))))
 
 (defn wrap-selection [x path elem]
   (ui/wrap-on
