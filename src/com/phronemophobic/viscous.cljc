@@ -187,7 +187,7 @@
           shortened
           (when (pos? len)
             (if (<= len (- width 2))
-              s
+              (str "\"" s "\"")
               (case width
                 0 nil
 
