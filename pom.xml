@@ -5,7 +5,7 @@
   <artifactId>viscous</artifactId>
   <version>1.1</version>
   <name>com.phronemophobic/viscous</name>
-  <description>FIXME: my new library.</description>
+  <description>A visual data inspector/explorer that runs in constant space, time, and screen space.</description>
   <url>https://github.com/com.phronemophobic/viscous</url>
   <licenses>
     <license>
