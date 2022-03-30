@@ -23,12 +23,12 @@ Try it! https://phronmophobic.github.io/viscous/
 
 #### deps.edn
 ```clojure
-com.phronemophobic/viscous {:mvn/version "1.1"}
+com.phronemophobic/viscous {:mvn/version "1.2"}
 ```
 
 #### lein
 ```clojure
-[com.phronemophobic/viscous "1.1"]
+[com.phronemophobic/viscous "1.2"]
 ```
 
 ## Programmtic Usage

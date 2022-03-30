@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.phronemophobic</groupId>
   <artifactId>viscous</artifactId>
-  <version>1.1</version>
+  <version>1.2</version>
   <name>com.phronemophobic/viscous</name>
   <description>A visual data inspector/explorer that runs in constant space, time, and screen space.</description>
   <url>https://github.com/com.phronemophobic/viscous</url>
@@ -22,7 +22,7 @@
     <url>https://github.com/com.phronemophobic/viscous</url>
     <connection>scm:git:git://github.com/com.phronemophobic/viscous.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/com.phronemophobic/viscous.git</developerConnection>
-    <tag>v1.1</tag>
+    <tag>v1.2</tag>
   </scm>
   <dependencies>
     <dependency>
