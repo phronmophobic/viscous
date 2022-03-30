@@ -831,7 +831,7 @@
   "Open an inspector window to view obj."
   ([obj]
    (inspect obj {}))
-  ([obj {:keys [width height show-context?] :as opts
+  ([obj {:keys [width height show-context? sync?] :as opts
          :or {show-context? true}}]
    (let [width (or width 80)
          height (or height 40)
@@ -845,13 +845,17 @@
                                                                     {:obj (wrap nil)
                                                                      :width 0
                                                                      :height 0})))
-         window-width (max empty-width
-                           (* cell-width width))
-         window-height (+ empty-height
+         window-width (+ 50
+                         (max empty-width
+                              (* cell-width width)))
+         window-height (+ 100
+                          empty-height
                           height
-                          (* cell-height (inc height)))]
-     (tk/run
-       toolkit
+                          (* cell-height (inc height)))
+         run (if sync?
+               tk/run-sync
+               tk/run)]
+     (run toolkit
        app
        {:window-title "Inspect"
         :window-start-width window-width
