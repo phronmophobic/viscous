@@ -31,7 +31,7 @@ com.phronemophobic/viscous {:mvn/version "1.1"}
 [com.phronemophobic/viscous "1.1"]
 ```
 
-## Usage
+## Programmtic Usage
 
 ```clojure
 (require '[com.phronemophobic.viscous :as viscous])
@@ -41,6 +41,46 @@ com.phronemophobic/viscous {:mvn/version "1.1"}
 ;; open inspector window
 (viscous/inspect my-data)
 
+```
+
+## Cli usage
+
+Create an alias for viscous
+
+```clojure
+
+{
+ :aliases {
+```
+```clojure
+  :viscous
+  {:replace-deps {com.phronemophobic/viscous {:mvn/version "1.2"}
+                  org.clojure/data.json {:mvn/version "2.4.0"}}
+   :exec-fn com.phronemophobic.viscous.cli/main}
+```
+```clojure
+           }
+}
+```
+
+Read edn from stdin:
+```sh
+cat data.edn | clojure -X:viscous :file -
+```
+
+Read edn from filename:
+```sh
+clojure -X:viscous :file data.edn
+```
+
+Read json from stdin:
+```sh
+cat data.json | clojure -X:viscous :json-file -
+```
+
+Read json from filename:
+```sh
+clojure -X:viscous :json-file data.edn
 ```
 
 ## Status
