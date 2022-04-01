@@ -21,8 +21,7 @@
   (:cljs
    [(def monospaced (delay
                       (ui/font "Ubuntu Mono"
-                               nil
-                               )))
+                               nil)))
     (def cell-width)
     (def cell-height)]
 

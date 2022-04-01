@@ -88,12 +88,12 @@
 (def canvas (.getElementById js/document "canvas"))
 (defn -main []
   (webgl/load-font
-   (:name viscous/monospaced)
+   (:name @viscous/monospaced)
    "https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap"
    "https://fonts.gstatic.com/s/ubuntumono/v6/EgeuS9OtEmA0y_JRo03MQaCWcynf_cDxXwCLxiixG1c.ttf"
 
    (fn []
-     (let [freetype-font (webgl/get-font viscous/monospaced)
+     (let [freetype-font (webgl/get-font @viscous/monospaced)
            space-glyph (-> freetype-font
                            (.-glyphs)
                            (.-glyphs)
