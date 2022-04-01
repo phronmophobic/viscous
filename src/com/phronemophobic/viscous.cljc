@@ -8,31 +8,36 @@
     :as component]))
 
 (defonce toolkit
-  #?(:clj
-     (if-let [tk (resolve 'membrane.skia/toolkit)]
-       @tk
-       @(requiring-resolve 'membrane.java2d/toolkit))
-     :cljs
-     nil))
+  (delay
+    #?(:clj
+       (if-let [tk (resolve 'membrane.skia/toolkit)]
+         @tk
+         @(requiring-resolve 'membrane.java2d/toolkit))
+       :cljs
+       nil)))
 
 (do
   #?@
   (:cljs
-   [(def monospaced (ui/font "Ubuntu Mono"
-                             nil
-                             ))
+   [(def monospaced (delay
+                      (ui/font "Ubuntu Mono"
+                               nil
+                               )))
     (def cell-width)
     (def cell-height)]
 
    :clj
    [(def monospaced
-      (if (tk/font-exists? toolkit (ui/font "Menlo" 11))
-        (ui/font "Menlo" 11)
-        (ui/font "monospaced" 11)))
+      (delay
+        (if (tk/font-exists? @toolkit (ui/font "Menlo" 11))
+          (ui/font "Menlo" 11)
+          (ui/font "monospaced" 11))))
     (def cell-width
-      (tk/font-advance-x toolkit monospaced " "))
+      (delay
+        (tk/font-advance-x @toolkit @monospaced " ")))
     (def cell-height
-      (tk/font-line-height toolkit monospaced))]))
+      (delay
+        (tk/font-line-height @toolkit @monospaced)))]))
 
 
 
@@ -82,7 +87,7 @@
 
 
 (defn indent [n]
-  (ui/spacer (* n cell-width) 0))
+  (ui/spacer (* n @cell-width) 0))
 
 (defn inspector-dispatch [{:keys [obj width height]}]
   (if (or (<= width 0)
@@ -132,7 +137,7 @@
                                   (- width 3)))
                    "..."))))]
     (when shortened
-      (ui/label shortened monospaced))))
+      (ui/label shortened @monospaced))))
 
 (defn split-evenly [width n]
   (if (zero? n)
@@ -203,7 +208,7 @@
                                     (- width 4)))
                       "..."))))]
       (when shortened
-        (ui/label shortened monospaced)))))
+        (ui/label shortened @monospaced)))))
 
 (defn wrap-selection [x path elem]
   (ui/wrap-on
@@ -282,7 +287,7 @@
                                        :width width})))
                         pix-width (ui/width elem)
                         elem-width (int (Math/ceil (/ pix-width
-                                                      cell-width)))]
+                                                      @cell-width)))]
                     (recur (conj body elem)
                            (inc i)
                            (- width elem-width
@@ -420,7 +425,7 @@
           (ui/vertical-layout
            (ui/with-color (:bracket colors)
              (ilabel open width))
-           (ui/translate cell-width 0
+           (ui/translate @cell-width 0
                          (ui/vertical-layout
                           (when has-previous?
                             (ui/on
@@ -691,8 +696,8 @@
                               body]}]
   (if-not resizing?
     body
-    (let [w (+  (* width cell-width))
-          h (+  (* height cell-height))
+    (let [w (+  (* width @cell-width))
+          h (+  (* height @cell-height))
           temp-width (get extra ::temp-width w)
           temp-height (get extra ::temp-height h)]
      (ui/on
@@ -701,8 +706,8 @@
         [[:set $resizing? false]])
       :mouse-move-global
       (fn [[x y]]
-        [[:set $width (int (/ x  cell-width))]
-         [:set $height (int (/ y  cell-height))]
+        [[:set $width (int (/ x  @cell-width))]
+         [:set $height (int (/ y  @cell-height))]
          [:set $temp-width x]
          [:set $temp-height y]])
       (ui/no-events
@@ -810,14 +815,14 @@
               (ui/filled-rectangle [1 0 0 0.25]
                                    8 8))
              [rw rh] (ui/bounds resize-button)]
-         [(ui/translate (- (* width cell-width)
+         [(ui/translate (- (* width @cell-width)
                            rw)
-                        (- (* height cell-height)
+                        (- (* height @cell-height)
                            rh)
                         resize-button)
-          (ui/translate (- (* width cell-width)
+          (ui/translate (- (* width @cell-width)
                            (* 2 rw))
-                        (- (* height cell-height)
+                        (- (* height @cell-height)
                            rh)
                         pop-button)
           elem]
@@ -847,15 +852,15 @@
                                                                      :height 0})))
          window-width (+ 50
                          (max empty-width
-                              (* cell-width width)))
+                              (* @cell-width width)))
          window-height (+ 100
                           empty-height
                           height
-                          (* cell-height (inc height)))
+                          (* @cell-height (inc height)))
          run (if sync?
                tk/run-sync
                tk/run)]
-     (run toolkit
+     (run @toolkit
        app
        {:window-title "Inspect"
         :window-start-width window-width

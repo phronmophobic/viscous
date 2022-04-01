@@ -101,8 +101,8 @@
            font-size (:size ui/default-font)
            fscale (membrane.webgl/font-scale freetype-font font-size)
            advance (* fscale (.-advanceWidth space-glyph))]
-       (set! viscous/cell-width advance)
-       (set! viscous/cell-height (membrane.webgl/font-line-height viscous/monospaced)))
+       (set! viscous/cell-width (delay advance))
+       (set! viscous/cell-height (delay (membrane.webgl/font-line-height @viscous/monospaced))))
      
      #_(js/console.log (-> (.-fonts js/document)
                          (.load (str 
@@ -122,10 +122,10 @@
                                                                        :width 0
                                                                        :height 0})))
            window-width (max empty-width
-                             (* viscous/cell-width width))
+                             (* @viscous/cell-width width))
            window-height (+ empty-height
                             height
-                            (* viscous/cell-height (inc height)))]
+                            (* @viscous/cell-height (inc height)))]
        (defonce canvas-info (membrane.webgl/run
                               app
                               {:container canvas}))
