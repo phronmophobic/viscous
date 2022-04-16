@@ -111,6 +111,7 @@
 
       (coll? obj) :collection
       (seqable? obj) :seqable
+      (tagged-literal? obj) :tagged-literal
       #?@(:clj [(instance? clojure.lang.IDeref obj) :deref])
       (satisfies? PWrapped obj) :pwrapped
       (fn? obj) :fn
@@ -584,6 +585,34 @@
  (defmethod inspector* :deref
    [{:keys [obj width height] :as m}]
    (inspector-deref m)))
+
+
+(defn inspector-tagged-literal [{:keys [obj width height path highlight-path]}]
+  (let [[left right] (split-ratio (- width 2) one-third)
+        tag (:tag obj)
+        form (:form obj)]
+    (ui/horizontal-layout
+     (when (pos? width)
+       (ui/label "#"))
+     (inspector* {:obj tag
+                  :height height
+                  :width left})
+     (indent 1)
+     (let [child-path path]
+       (wrap-highlight
+        child-path
+        highlight-path
+        (wrap-selection form
+                        child-path
+                        (inspector* {:obj form
+                                     :height height
+                                     :path child-path
+                                     :highlight-path highlight-path
+                                     :width right})))))))
+
+(defmethod inspector* :tagged-literal
+ [{:keys [obj width height] :as m}]
+  (inspector-tagged-literal m))
 
 (defn inspector-pwrapped [{:keys [obj width height path highlight-path]}]
   (let [[left right] (split-ratio (- width 2) one-third)

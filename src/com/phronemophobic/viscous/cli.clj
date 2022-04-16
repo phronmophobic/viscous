@@ -7,7 +7,7 @@
 
 (defn read-edn [rdr]
   (with-open [rdr (java.io.PushbackReader. rdr)]
-    (edn/read rdr)))
+    (edn/read {:default tagged-literal} rdr)))
 
 
 (defn read-json [rdr]

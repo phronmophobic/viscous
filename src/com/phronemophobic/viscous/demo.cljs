@@ -39,7 +39,6 @@
 (defn parse-edn-or-json [s]
   (try
     [nil (clojure.edn/read-string {:default (fn [tag x]
-                                              (prn "readign tag" tag x)
                                               x)}
                                   s)]
     (catch js/Object edn-error
