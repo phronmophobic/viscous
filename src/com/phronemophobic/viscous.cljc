@@ -236,6 +236,20 @@
                        body)
      body)))
 
+;; There are some data structures that implement Counted in
+;; linear time. Cruel!
+(defprotocol IBoundedCount
+  (-bounded-count [this n]))
+
+(extend-protocol IBoundedCount
+  #?(:clj Object
+     :cljs default)
+  (-bounded-count [this n]
+    (bounded-count n this))
+  nil
+  (-bounded-count [this n]
+    0))
+
 (defn inspector-seq-horizontal [{:keys [obj
                                         width
                                         height
@@ -307,7 +321,7 @@
                   (interpose (indent 1)
                              body))
            (let [len (try
-                       (bounded-count (inc (count body)) obj)
+                       (-bounded-count obj (inc (count body)))
                        (catch #?(:clj Exception :cljs js/Error) e
                          nil))]
              (when (= (count body) len)
@@ -356,8 +370,8 @@
             has-next? (let [len
                             ;; lazy sequences can throw here
                             (try
-                              (bounded-count (inc chunk-size)
-                                             (drop offset obj))
+                              (-bounded-count (drop offset obj)
+                                              (inc chunk-size))
                               (catch #?(:clj Exception :cljs js/Error) e
                                 (println e)
                                 nil))]
