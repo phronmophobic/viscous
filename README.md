@@ -70,7 +70,7 @@ cat data.edn | clojure -X:viscous :file -
 
 Read edn from filename:
 ```sh
-clojure -X:viscous :file data.edn
+clojure -X:viscous :file '"data.edn"'
 ```
 
 Read json from stdin:
@@ -80,7 +80,7 @@ cat data.json | clojure -X:viscous :json-file -
 
 Read json from filename:
 ```sh
-clojure -X:viscous :json-file data.edn
+clojure -X:viscous :json-file '"data.edn"'
 ```
 
 ## Status
