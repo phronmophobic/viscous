@@ -31,7 +31,7 @@ com.phronemophobic/viscous {:mvn/version "1.2"}
 [com.phronemophobic/viscous "1.2"]
 ```
 
-## Programmtic Usage
+## Programmatic Usage
 
 ```clojure
 (require '[com.phronemophobic.viscous :as viscous])
