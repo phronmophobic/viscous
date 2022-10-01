@@ -775,10 +775,12 @@
                        :on-click
                        (fn []
                          (when (seq stack)
-                           (let [{:keys [specimen path offsets]} (peek stack)]
-                             [[:set $specimen specimen]
-                              [:set $path path]
-                              [:set $offsets offsets]
+                           (let [{next-specimen :specimen
+                                  next-path :path
+                                  next-offsets :offets} (peek stack)]
+                             [[:set $specimen next-specimen]
+                              [:set $path next-path]
+                              [:set $offsets next-offsets]
                               [:update $stack pop]])))})
         (basic/button {:text "resizing"
                        :on-click
@@ -838,10 +840,12 @@
               :mouse-down
               (fn [_]
                 (if (seq stack)
-                  (let [{:keys [specimen path offsets]} (peek stack)]
-                    [[:set $specimen specimen]
-                     [:set $path path]
-                     [:set $offsets offsets]
+                  (let [{next-specimen :specimen
+                         next-path :path
+                         next-offsets :offets} (peek stack)]
+                    [[:set $specimen next-specimen]
+                     [:set $path next-path]
+                     [:set $offsets next-offsets]
                      [:update $stack pop]])
                   [[:delete $specimen]
                    [:delete $path]
