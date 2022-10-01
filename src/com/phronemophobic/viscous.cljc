@@ -861,7 +861,8 @@
               (ui/filled-rectangle [1 0 0 0.25]
                                    8 8))
              [rw rh] (ui/bounds resize-button)]
-         [(ui/translate (- (* width @cell-width)
+         [elem
+          (ui/translate (- (* width @cell-width)
                            rw)
                         (- (* height @cell-height)
                            rh)
@@ -870,8 +871,7 @@
                            (* 2 rw))
                         (- (* height @cell-height)
                            rh)
-                        pop-button)
-          elem]
+                        pop-button)]
          )}))))
 
 
