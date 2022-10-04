@@ -764,7 +764,9 @@
         (ui/spacer (+ temp-width 5)
                    (+ temp-height 5))])))))
 
-(defui inspector [{:keys [obj width height show-context?]}]
+(defui inspector [{:keys [obj width height show-context?]
+                   :or {width 40
+                        height 1}}]
   (let [stack (get extra [obj :stack] [])
         path (get extra [obj :path] [])
         offsets (get extra [obj :offsets] [0])
