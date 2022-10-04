@@ -45,8 +45,12 @@
 
 (deftype APWrapped [obj]
   #?@(:clj
-      [Object
-       (hashCode [_] (System/identityHashCode obj))])
+      [
+       clojure.lang.IHashEq
+       (hasheq [_] (System/identityHashCode obj))
+       (hashCode [_] (System/identityHashCode obj))
+       (equals [this that]
+               (identical? (:obj this) (:obj that)))])
 
   PWrapped
   (-unwrap [_]
