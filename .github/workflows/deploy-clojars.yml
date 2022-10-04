@@ -20,7 +20,7 @@ jobs:
       uses: DeLaGuardo/setup-clojure@3.5
       with:
         # Clojure CLI version to make available on the path.
-        cli: 1.10.3.1058
+        cli: 1.11.0.1100
 
     - name: Install dependencies
       run: clojure -P
