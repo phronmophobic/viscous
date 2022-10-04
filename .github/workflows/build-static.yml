@@ -1,9 +1,6 @@
-name: Clojure CI
-
+name: Build and Deploy Web Demo
 on:
   push:
-
-
 jobs:
   build:
 
@@ -42,3 +39,33 @@ jobs:
       with:
         branch: gh-pages # The branch the action should deploy to.
         folder: public # The folder the action should deploy.
+
+
+name: Clojars deploy
+on:
+    workflow_dispatch:
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Prepare java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'zulu'
+        java-version: '11'
+
+    - uses: actions/checkout@v2
+    - name: Setup Clojure
+      # You may pin to the exact commit or the version.
+      # uses: DeLaGuardo/setup-clojure@5042876523f30f5efcf1d6feaa48bd1498d7814f
+      uses: DeLaGuardo/setup-clojure@3.5
+      with:
+        # Clojure CLI version to make available on the path.
+        cli: 1.10.3.1058
+
+    - name: Install dependencies
+      run: clojure -P
+    - name: Deploy
+      run: clojure -T:build deploy
