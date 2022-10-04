@@ -25,18 +25,19 @@ jobs:
     - name: Install dependencies
       run: clojure -P
     - name: pre-Deploy
+      env:
+        CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
+        CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
       run: echo "$CLOJARS_USERNAME" | wc -c
-      env:
-        CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
-        CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
     - name: pre-Deploy2
+      env:
+        CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
+        CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
       run: echo "$CLOJARS_PASSWORD" | wc -c
-      env:
-        CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
-        CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
     - name: Deploy
-      run: clojure -T:build deploy
       env:
         CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
         CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
+      run: clojure -T:build deploy
+
 
