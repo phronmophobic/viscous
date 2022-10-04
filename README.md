@@ -31,7 +31,7 @@ com.phronemophobic/viscous {:mvn/version "1.2"}
 [com.phronemophobic/viscous "1.2"]
 ```
 
-## Programmtic Usage
+## Programmatic Usage
 
 ```clojure
 (require '[com.phronemophobic.viscous :as viscous])
@@ -70,7 +70,7 @@ cat data.edn | clojure -X:viscous :file -
 
 Read edn from filename:
 ```sh
-clojure -X:viscous :file data.edn
+clojure -X:viscous :file '"data.edn"'
 ```
 
 Read json from stdin:
@@ -80,7 +80,7 @@ cat data.json | clojure -X:viscous :json-file -
 
 Read json from filename:
 ```sh
-clojure -X:viscous :json-file data.edn
+clojure -X:viscous :json-file '"data.edn"'
 ```
 
 ## Status
