@@ -10,6 +10,10 @@
   :cljs
   {:extra-deps {thheller/shadow-cljs {:mvn/version "2.16.12"}}}
 
+  :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.3" :git/sha "0d20256"}
+                 slipset/deps-deploy {:mvn/version "RELEASE"}}
+          :ns-default build}
+
   :shadow-cljs
   {:extra-deps {thheller/shadow-cljs {:mvn/version "2.16.12"}}
    :main-opts ["-m" "shadow.cljs.devtools.cli"]}
