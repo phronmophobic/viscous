@@ -50,7 +50,9 @@
        (hasheq [_] (System/identityHashCode obj))
        (hashCode [_] (System/identityHashCode obj))
        (equals [this that]
-               (identical? (:obj this) (:obj that)))])
+               (if (instance? APWrapped that)
+                 (identical? obj (-unwrap that))
+                 false))])
 
   PWrapped
   (-unwrap [_]
