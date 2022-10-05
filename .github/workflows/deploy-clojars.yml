@@ -7,48 +7,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # - name: Prepare java
-    #   uses: actions/setup-java@v2
-    #   with:
-    #     distribution: 'zulu'
-    #     java-version: '11'
+    - name: Prepare java
+      uses: actions/setup-java@v2
+      with:
+        distribution: 'zulu'
+        java-version: '11'
 
-    # - uses: actions/checkout@v2
-    # - name: Setup Clojure
-    #   # You may pin to the exact commit or the version.
-    #   # uses: DeLaGuardo/setup-clojure@5042876523f30f5efcf1d6feaa48bd1498d7814f
-    #   uses: DeLaGuardo/setup-clojure@3.5
-    #   with:
-    #     # Clojure CLI version to make available on the path.
-    #     cli: 1.11.0.1100
+    - uses: actions/checkout@v2
+    - name: Setup Clojure
+      # You may pin to the exact commit or the version.
+      # uses: DeLaGuardo/setup-clojure@5042876523f30f5efcf1d6feaa48bd1498d7814f
+      uses: DeLaGuardo/setup-clojure@3.5
+      with:
+        # Clojure CLI version to make available on the path.
+        cli: 1.11.0.1100
 
-    # - name: Install dependencies
-    #   run: clojure -P
-    - name: pre-Deploy
+    - name: Install dependencies
+      run: clojure -P
+
+    - name: Deploy
       env:
         CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
         CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
-      run: echo "$CLOJARS_USERNAME" | wc -c
-    - name: pre-Deploy2
-      env:
-        CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
-        CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
-      run: echo "$CLOJARS_PASSWORD" | wc -c
-    - name: pre-Deploy3
-      env:
-        CLOJARS_USERNAME: "foobar"
-      run: echo "$CLOJARS_USERNAME" | wc -c
-    - name: pre-Deploy4
-      run: echo "$CLOJARS_USERNAME" | wc -c
-    - name: pre-Deploy5
-      env:
-        TEST_SECRET: ${{ secrets.TEST_SECRET }}
-      run: echo "$TEST_SECRET" | wc -c
-
-    # - name: Deploy
-    #   env:
-    #     CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
-    #     CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
-    #   run: clojure -T:build deploy
+      run: clojure -T:build deploy
 
 
