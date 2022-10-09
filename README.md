@@ -2,6 +2,8 @@
 
 A visual data inspector/explorer that runs in constant space, time, and screen space.
 
+Built with [membrane](https://github.com/phronmophobic/membrane).
+
 ### Overview
 
 ![Overview](inspector.gif?raw=true)
