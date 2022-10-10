@@ -33,7 +33,7 @@ jobs:
     - name: Install dependencies
       run: clojure -P
     - name: Build static
-      run: clojure -M:shadow-cljs release app
+      run: clojure -M:shadow-cljs:cljs release app
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@v4.4.0
       with:
