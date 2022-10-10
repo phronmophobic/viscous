@@ -1,21 +1,25 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        com.phronemophobic/membrane {:mvn/version "0.9.31.8-beta"
+        com.phronemophobic/membrane {:mvn/version "0.10.0-beta"
                                      ;; :local/root "../membrane2"
                                      }}
  :aliases
  {:test {:extra-paths ["test"]
          :extra-deps {org.clojure/test.check {:mvn/version "1.1.0"}}}
 
+
+  :viscous {:exec-fn com.phronemophobic.viscous.cli/main
+            :extra-deps {org.clojure/data.json {:mvn/version "2.4.0"}}}
+
   :cljs
-  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.16.12"}}}
+  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.20.3"}}}
 
   :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.3" :git/sha "0d20256"}
                  slipset/deps-deploy {:mvn/version "RELEASE"}}
           :ns-default build}
 
   :shadow-cljs
-  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.16.12"}}
+  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.20.3"}}
    :main-opts ["-m" "shadow.cljs.devtools.cli"]}
 
   :project
