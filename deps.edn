@@ -12,7 +12,8 @@
             :extra-deps {org.clojure/data.json {:mvn/version "2.4.0"}}}
 
   :cljs
-  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.20.3"}}}
+  {:extra-deps {thheller/shadow-cljs {:mvn/version "2.20.3"}
+                com.phronemophobic/cljs-cache {:mvn/version "0.1.5"}}}
 
   :build {:deps {io.github.clojure/tools.build {:git/tag "v0.8.3" :git/sha "0d20256"}
                  slipset/deps-deploy {:mvn/version "RELEASE"}}
