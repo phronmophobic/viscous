@@ -1,6 +1,6 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
-        com.phronemophobic/membrane {:mvn/version "0.10.1-beta-20221010.014101-2"
+        com.phronemophobic/membrane {:mvn/version "0.10.1-beta"
                                      ;; :local/root "../membrane2"
                                      }}
  :aliases
