@@ -2,6 +2,7 @@
   (:require
    [membrane.ui :as ui]
    [membrane.basic-components :as basic]
+   [clojure.string :as str]
    [membrane.toolkit :as tk]
    #?(:cljs goog.object)
    [membrane.component :refer [defui defeffect]
@@ -212,7 +213,8 @@
                 (str "\""
                      (subs s 0 (max 0
                                     (- width 4)))
-                      "..."))))]
+                      "..."))))
+          shortened (str/replace shortened #"\R" "↵" )]
       (when shortened
         (ui/label shortened @monospaced)))))
 
