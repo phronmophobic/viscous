@@ -246,10 +246,10 @@
                   (str "\""
                        (subs s 0 (max 0
                                       (- width 4)))
-                       "..."))))
-            shortened (str/replace shortened #"\R" "↵" )]
+                       "..."))))]
         (when shortened
-          (ui/label shortened @monospaced))))))
+          (let [shortened (str/replace shortened #"\R" "↵" )]
+            (ui/label shortened @monospaced)))))))
 
 (defn wrap-selection [x path elem]
   (ui/wrap-on
