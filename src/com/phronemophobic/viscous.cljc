@@ -811,9 +811,7 @@
            (into []
                  cat
                  [path
-                  (:path m)
-                  ])]
-       (prn full-path)
+                  (:path m)])]
        [[::dnd/drag-start (assoc m :obj obj
                                    :path full-path)]]))
    body))
