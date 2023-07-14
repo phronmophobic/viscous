@@ -5,6 +5,7 @@
    [clojure.string :as str]
    [membrane.toolkit :as tk]
    #?(:cljs goog.object)
+   [membrane.alpha.component.drag-and-drop :as dnd]
    [membrane.component :refer [defui defeffect]
     :as component]))
 
@@ -257,7 +258,9 @@
      (let [intents (handler pos)]
        (if (seq intents)
          intents
-         [[::select x path]])))
+         [[::dnd/drag-start {:path path
+                             :x x}]
+          [::select x path]])))
    elem))
 
 (defn wrap-highlight [path highlight-path elem]
@@ -800,6 +803,21 @@
         (ui/spacer (+ temp-width 5)
                    (+ temp-height 5))])))))
 
+(defn wrap-drag-start [{:keys [obj path stack]} body]
+  (ui/on
+   ::dnd/drag-start
+   (fn [m]
+     (let [full-path
+           (into []
+                 cat
+                 [path
+                  (:path m)
+                  ])]
+       (prn full-path)
+       [[::dnd/drag-start (assoc m :obj obj
+                                   :path full-path)]]))
+   body))
+
 (defui inspector [{:keys [obj width height show-context?]
                    :or {width 40
                         height 1}}]
@@ -810,111 +828,114 @@
         specimen (get extra [obj :specimen] obj)
         resizing? (get extra :resizing?)
         highlight-path (get extra [obj :highlight-path])]
-    (ui/vertical-layout
-     (when show-context?
-       (ui/vertical-layout
-        (basic/button {:text "pop"
-                       :on-click
-                       (fn []
-                         (when (seq stack)
-                           (let [{next-specimen :specimen
-                                  next-path :path
-                                  next-offsets :offets} (peek stack)]
-                             [[:set $specimen next-specimen]
-                              [:set $path next-path]
-                              [:set $offsets next-offsets]
-                              [:update $stack pop]])))})
-        (basic/button {:text "resizing"
-                       :on-click
-                       (fn []
-                         [[:set $resizing? true]])})
-        (ui/label (str "offset: " offset))
-        (ui/label (str "path: " (pr-str path) ))))
-     (wrap-resizing
-      {:resizing? resizing?
-       :width width
-       :height height
-       :body
-       (let [elem
-             (ui/on
-              ::highlight
-              (fn [path]
-                [[:set $highlight-path path]])
-              ::previous-chunk
-              (fn []
-                [[:update $offsets
-                  (fn [offsets]
-                    (if (> (count offsets) 1)
-                      (pop offsets)
-                      offsets))]])
-              ::next-chunk
-              (fn [delta]
-                [[:update $offsets
-                  (fn [offsets]
-                    (let [offset (peek offsets)]
-                      (conj offsets (+ offset delta))))]])
+    (wrap-drag-start
+     {:obj obj
+      :path path
+      :stack stack}
+     (ui/vertical-layout
+      (when show-context?
+        (ui/vertical-layout
+         (basic/button {:text "pop"
+                        :on-click
+                        (fn []
+                          (when (seq stack)
+                            (let [{next-specimen :specimen
+                                   next-path :path
+                                   next-offsets :offets} (peek stack)]
+                              [[:set $specimen next-specimen]
+                               [:set $path next-path]
+                               [:set $offsets next-offsets]
+                               [:update $stack pop]])))})
+         (basic/button {:text "resizing"
+                        :on-click
+                        (fn []
+                          [[:set $resizing? true]])})
+         (ui/label (str "offset: " offset))
+         (ui/label (str "path: " (pr-str path) ))))
+      (wrap-resizing
+       {:resizing? resizing?
+        :width width
+        :height height
+        :body
+        (let [elem
+              (ui/on
+               ::highlight
+               (fn [path]
+                 [[:set $highlight-path path]])
+               ::previous-chunk
+               (fn []
+                 [[:update $offsets
+                   (fn [offsets]
+                     (if (> (count offsets) 1)
+                       (pop offsets)
+                       offsets))]])
+               ::next-chunk
+               (fn [delta]
+                 [[:update $offsets
+                   (fn [offsets]
+                     (let [offset (peek offsets)]
+                       (conj offsets (+ offset delta))))]])
 
-              ::select
-              (fn [x child-path]
-                [[:update $stack conj {:specimen specimen
-                                       :path path
-                                       :offsets offsets}]
-                 [:delete $highlight-path]
-                 [:update $path into child-path]
-                 [:set $offsets [0]]
-                 [:set $specimen (wrap x)]])
-              (ui/wrap-on
-               :mouse-move
-               (fn [handler pos]
-                 (let [intents (handler pos)]
-                   (if (seq intents)
-                     intents
-                     [[:set $highlight-path nil]])))
-               (inspector* {:obj (-unwrap specimen)
-                            :height height
-                            :path []
-                            :offset offset
-                            :highlight-path highlight-path
-                            :width width} )))
-             [ew eh] (ui/bounds elem)
-             pop-button
-             (ui/on
-              :mouse-down
-              (fn [_]
-                (if (seq stack)
-                  (let [{next-specimen :specimen
-                         next-path :path
-                         next-offsets :offets} (peek stack)]
-                    [[:set $specimen next-specimen]
-                     [:set $path next-path]
-                     [:set $offsets next-offsets]
-                     [:update $stack pop]])
-                  [[:delete $specimen]
-                   [:delete $path]
-                   [:delete $offsets]
-                   [:delete $stack]]))
-              (ui/filled-rectangle [0 0 1 0.25]
-                                   8 8))
-             resize-button
-             (ui/on
-              :mouse-down
-              (fn [_]
-                [[:set $resizing? true]])
-              (ui/filled-rectangle [1 0 0 0.25]
-                                   8 8))
-             [rw rh] (ui/bounds resize-button)]
-         [elem
-          (ui/translate (- (* width @cell-width)
-                           rw)
-                        (- (* height @cell-height)
-                           rh)
-                        resize-button)
-          (ui/translate (- (* width @cell-width)
-                           (* 2 rw))
-                        (- (* height @cell-height)
-                           rh)
-                        pop-button)]
-         )}))))
+               ::select
+               (fn [x child-path]
+                 [[:update $stack conj {:specimen specimen
+                                        :path path
+                                        :offsets offsets}]
+                  [:delete $highlight-path]
+                  [:update $path into child-path]
+                  [:set $offsets [0]]
+                  [:set $specimen (wrap x)]])
+               (ui/wrap-on
+                :mouse-move
+                (fn [handler pos]
+                  (let [intents (handler pos)]
+                    (if (seq intents)
+                      intents
+                      [[:set $highlight-path nil]])))
+                (inspector* {:obj (-unwrap specimen)
+                             :height height
+                             :path []
+                             :offset offset
+                             :highlight-path highlight-path
+                             :width width} )))
+              [ew eh] (ui/bounds elem)
+              pop-button
+              (ui/on
+               :mouse-down
+               (fn [_]
+                 (if (seq stack)
+                   (let [{next-specimen :specimen
+                          next-path :path
+                          next-offsets :offets} (peek stack)]
+                     [[:set $specimen next-specimen]
+                      [:set $path next-path]
+                      [:set $offsets next-offsets]
+                      [:update $stack pop]])
+                   [[:delete $specimen]
+                    [:delete $path]
+                    [:delete $offsets]
+                    [:delete $stack]]))
+               (ui/filled-rectangle [0 0 1 0.25]
+                                    8 8))
+              resize-button
+              (ui/on
+               :mouse-down
+               (fn [_]
+                 [[:set $resizing? true]])
+               (ui/filled-rectangle [1 0 0 0.25]
+                                    8 8))
+              [rw rh] (ui/bounds resize-button)]
+          [elem
+           (ui/translate (- (* width @cell-width)
+                            rw)
+                         (- (* height @cell-height)
+                            rh)
+                         resize-button)
+           (ui/translate (- (* width @cell-width)
+                            (* 2 rw))
+                         (- (* height @cell-height)
+                            rh)
+                         pop-button)])})))))
 
 
 
