@@ -891,6 +891,12 @@
                   [:set $offsets [0]]
                   [:set $specimen (wrap x)]])
                (ui/wrap-on
+                :mouse-down
+                (fn [handler pos]
+                  (let [intents (handler pos)]
+                    (if (seq intents)
+                      intents
+                      [[::dnd/drag-start {::dnd/obj {:x specimen}}]])))
                 :mouse-move
                 (fn [handler pos]
                   (let [intents (handler pos)]
