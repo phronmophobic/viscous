@@ -55,6 +55,9 @@
 (deftype APWrapped [obj]
   #?@(:clj
       [
+       clojure.lang.IDeref
+       (deref [_] obj)
+
        clojure.lang.IHashEq
        (hasheq [_] (System/identityHashCode obj))
        (hashCode [_] (System/identityHashCode obj))
@@ -127,8 +130,8 @@
       (coll? obj) :collection
       (seqable? obj) :seqable
       (tagged-literal? obj) :tagged-literal
-      #?@(:clj [(instance? clojure.lang.IDeref obj) :deref])
       (satisfies? PWrapped obj) :pwrapped
+      #?@(:clj [(instance? clojure.lang.IDeref obj) :deref])
       (fn? obj) :fn
       #?@(:clj [(instance? Throwable obj) :throwable])
       :else :object)))
@@ -258,8 +261,8 @@
      (let [intents (handler pos)]
        (if (seq intents)
          intents
-         [[::dnd/drag-start {:path path
-                             :x x}]
+         [[::dnd/drag-start {::dnd/obj {:path path
+                                        :x (wrap x)}}]
           [::select x path]])))
    elem))
 
@@ -811,9 +814,13 @@
            (into []
                  cat
                  [path
-                  (:path m)])]
-       [[::dnd/drag-start (assoc m :obj obj
-                                   :path full-path)]]))
+                  (-> m ::dnd/obj :path)])]
+       [[::dnd/drag-start
+         (update m
+                 ::dnd/obj
+                 #(assoc %
+                         :obj obj
+                         :path full-path))]]))
    body))
 
 (defui inspector [{:keys [obj width height show-context?]
