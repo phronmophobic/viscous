@@ -1,7 +1,7 @@
 {:paths ["src" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.3"}
         com.phronemophobic/membrane {:mvn/version "0.14.1-beta"
-                                     ;; :local/root "../membrane2"
+                                     ;; :local/root "../membrane"
                                      }}
  :aliases
  {:test {:extra-paths ["test"]
