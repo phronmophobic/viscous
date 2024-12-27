@@ -25,12 +25,12 @@ Try it! https://phronmophobic.github.io/viscous/
 
 #### deps.edn
 ```clojure
-com.phronemophobic/viscous {:mvn/version "1.3.2"}
+com.phronemophobic/viscous {:mvn/version "1.3.3"}
 ```
 
 #### lein
 ```clojure
-[com.phronemophobic/viscous "1.3.2"]
+[com.phronemophobic/viscous "1.3.3"]
 ```
 
 ## Programmatic Usage
@@ -56,7 +56,7 @@ Create an alias for viscous
 ```
 ```clojure
   :viscous
-  {:replace-deps {com.phronemophobic/viscous {:mvn/version "1.3.2"}
+  {:replace-deps {com.phronemophobic/viscous {:mvn/version "1.3.3"}
                   org.clojure/data.json {:mvn/version "2.4.0"}}
    :exec-fn com.phronemophobic.viscous.cli/main}
 ```
