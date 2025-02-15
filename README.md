@@ -25,12 +25,12 @@ Try it! https://phronmophobic.github.io/viscous/
 
 #### deps.edn
 ```clojure
-com.phronemophobic/viscous {:mvn/version "1.3.3"}
+com.phronemophobic/viscous {:mvn/version "1.3.4"}
 ```
 
 #### lein
 ```clojure
-[com.phronemophobic/viscous "1.3.3"]
+[com.phronemophobic/viscous "1.3.4"]
 ```
 
 ## Programmatic Usage
@@ -56,7 +56,7 @@ Create an alias for viscous
 ```
 ```clojure
   :viscous
-  {:replace-deps {com.phronemophobic/viscous {:mvn/version "1.3.3"}
+  {:replace-deps {com.phronemophobic/viscous {:mvn/version "1.3.4"}
                   org.clojure/data.json {:mvn/version "2.4.0"}}
    :exec-fn com.phronemophobic.viscous.cli/main}
 ```
@@ -95,6 +95,6 @@ I'm generally interested in finding better ways to represent and explore medium 
 
 ## License
 
-Copyright © 2021 Adrian Smith
+Copyright © 2025 Adrian Smith
 
 Distributed under the Eclipse Public License version 1.0.
