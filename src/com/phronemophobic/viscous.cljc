@@ -126,6 +126,7 @@
       (keyword? obj) :keyword
       (boolean? obj) :boolean
       (nil? obj) :nil
+      (uuid? obj) :uuid
 
       (coll? obj) :collection
       (seqable? obj) :seqable
@@ -673,6 +674,30 @@
 (defmethod inspector* :tagged-literal
  [{:keys [obj width height] :as m}]
   (inspector-tagged-literal m))
+
+(defn inspector-uuid [{:keys [obj width height path highlight-path]}]
+  (let [[left right] (split-ratio (- width 1) one-third)
+        tag (symbol "#uuid")]
+    (ui/horizontal-layout
+     (inspector* {:obj tag
+                  :height height
+                  :width left})
+     (indent 1)
+     (let [child-path (conj path '(str))]
+       (wrap-highlight
+        child-path
+        highlight-path
+        (wrap-selection (str obj)
+                        child-path
+                        (inspector* {:obj (str obj)
+                                     :height height
+                                     :path child-path
+                                     :highlight-path highlight-path
+                                     :width right})))))))
+
+(defmethod inspector* :uuid
+ [{:keys [obj width height] :as m}]
+  (inspector-uuid m))
 
 (defn inspector-pwrapped [{:keys [obj width height path highlight-path]}]
   (let [[left right] (split-ratio (- width 2) one-third)
