@@ -205,55 +205,62 @@
 
 (defmethod inspector* :string
   [{:keys [obj width height]}]
-  (if (and paragraph
-           paragraph-intrinsic-width)
-    (ui/translate
-     0 3
-     (let [;; upper bound
-           ;; only necessary for very large strings
-           max-length (* width height)
-           s (if (> (count obj) max-length)
-               (subs obj 0 max-length)
-               obj)
-           p
-           (paragraph
-            s
-            (* width @cell-width)
-            {:paragraph-style/max-lines height
-             :paragraph-style/text-style
-             {:text-style/color (:string colors)
-              :text-style/font-size 11
-              :text-style/font-families ["Menlo"
-                                         "monospaced"]}})
-           [pw ph] (ui/bounds p)
-           intrinsic-width (paragraph-intrinsic-width p)
-           w (min pw intrinsic-width)]
-       (ui/fixed-bounds [w ph]
+  (let [;; display empty strings as ""
+        ;; otherwise, they're invisible.
+        ;; this does mean that empty strings and
+        ;; the string "\"\"" are indistinguishable.
+        obj (if (zero? (count obj))
+              "\"\""
+              obj)]
+    (if (and paragraph
+             paragraph-intrinsic-width)
+      (ui/translate
+       0 3
+       (let [ ;; upper bound
+             ;; only necessary for very large strings
+             max-length (* width height)
+             s (if (> (count obj) max-length)
+                 (subs obj 0 max-length)
+                 obj)
+             p
+             (paragraph
+              s
+              (* width @cell-width)
+              {:paragraph-style/max-lines height
+               :paragraph-style/text-style
+               {:text-style/color (:string colors)
+                :text-style/font-size 11
+                :text-style/font-families ["Menlo"
+                                           "monospaced"]}})
+             [pw ph] (ui/bounds p)
+             intrinsic-width (paragraph-intrinsic-width p)
+             w (min pw intrinsic-width)]
+         (ui/fixed-bounds [w ph]
                           p)))
-    (ui/with-color (:string colors)
-      (let [s obj
-            len (count s)
-            shortened
-            (when (pos? len)
-              (if (<= len (- width 2))
-                (str "\"" s "\"")
-                (case width
-                  0 nil
+      (ui/with-color (:string colors)
+        (let [s obj
+              len (count s)
+              shortened
+              (when (pos? len)
+                (if (<= len (- width 2))
+                  (str "\"" s "\"")
+                  (case width
+                    0 nil
 
-                  1 "\""
+                    1 "\""
 
-                  (2 3) (str "\"" (subs s 0 (dec width)))
+                    (2 3) (str "\"" (subs s 0 (dec width)))
 
-                  4 "\"..."
+                    4 "\"..."
 
-                  ;; else
-                  (str "\""
-                       (subs s 0 (max 0
-                                      (- width 4)))
-                       "..."))))]
-        (when shortened
-          (let [shortened (str/replace shortened #"\R" "↵" )]
-            (ui/label shortened @monospaced)))))))
+                    ;; else
+                    (str "\""
+                         (subs s 0 (max 0
+                                        (- width 4)))
+                         "..."))))]
+          (when shortened
+            (let [shortened (str/replace shortened #"\R" "↵" )]
+              (ui/label shortened @monospaced))))))))
 
 (defn wrap-selection [x path elem]
   (ui/wrap-on
