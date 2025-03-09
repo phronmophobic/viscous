@@ -360,21 +360,20 @@
                              (next obj)
                              (catch #?(:clj Exception :cljs js/Error) e
                                e)))))))]
-        (when (pos? (count body))
-          (ui/horizontal-layout
-           (ui/with-color (:bracket colors)
-             (ilabel open (count open)))
+        (ui/horizontal-layout
+         (ui/with-color (:bracket colors)
+           (ilabel open (count open)))
+         (when (pos? (count body))
            (apply ui/horizontal-layout
                   (interpose (indent 1)
-                             body))
-           (let [len (try
-                       (-bounded-count obj (inc (count body)))
-                       (catch #?(:clj Exception :cljs js/Error) e
-                         nil))]
-             (when (= (count body) len)
-              (ui/with-color (:bracket colors)
-                (ilabel close (count close))))))))))
-  )
+                             body)))
+         (let [len (try
+                     (-bounded-count obj (inc (count body)))
+                     (catch #?(:clj Exception :cljs js/Error) e
+                       nil))]
+           (when (= (count body) len)
+             (ui/with-color (:bracket colors)
+               (ilabel close (count close))))))))))
 
 (def chunk-size 32)
 (defn inspector-seq [{:keys [obj
