@@ -73,6 +73,28 @@
 (defn wrap [o]
   (->APWrapped o))
 
+(deftype APWrapped2 [obj hash]
+  #?@(:clj
+      [
+       clojure.lang.IDeref
+       (deref [_] obj)
+
+       clojure.lang.IHashEq
+       (hasheq [_] hash)
+       (hashCode [_] hash)
+       (equals [this that]
+               (if (instance? APWrapped that)
+                 (identical? obj (-unwrap that))
+                 false))])
+
+  PWrapped
+  (-unwrap [_]
+    obj))
+
+(defn wrap-unique [o]
+  (->APWrapped2 o (let [rng (java.util.concurrent.ThreadLocalRandom/current)]
+                    (.nextInt rng))))
+
 
 (def colors
   {:keyword [0.46666666865348816 0.0 0.5333333611488342],
@@ -126,19 +148,22 @@
       (keyword? obj) :keyword
       (boolean? obj) :boolean
       (nil? obj) :nil
-      (uuid? obj) :uuid
-
       (coll? obj) :collection
       (seqable? obj) :seqable
       (tagged-literal? obj) :tagged-literal
-      (satisfies? PWrapped obj) :pwrapped
+      (instance? clojure.lang.Namespace obj) :namespace
+      (uuid? obj) :uuid
+      (inst? obj) :inst
+      (class? obj) :class
+      (instance? java.io.File obj) :file
+      ;; (satisfies? PWrapped obj) :pwrapped
       #?@(:clj [(instance? clojure.lang.IDeref obj) :deref])
       (fn? obj) :fn
       #?@(:clj [(instance? Throwable obj) :throwable])
       :else :object)))
 
 
-(defmulti inspector* inspector-dispatch)
+(defmulti inspector* #'inspector-dispatch)
 
 (defn ilabel [o width]
   (let [s (str o)
@@ -155,6 +180,26 @@
               (str (subs s 0 (max 0
                                   (- width 3)))
                    "..."))))]
+    (when shortened
+      (ui/label shortened @monospaced))))
+
+(defn ilabel-reverse
+  "Like ilabel, but truncates at the front."
+  [o width]
+  (let [s (str o)
+        len (count s)
+        shortened
+        (when (pos? len)
+          (if (<= len width)
+            s
+            (case width
+              0 nil
+              (1 2 3) (subs s (- len (min len width)))
+
+              ;; else
+              (str "..."
+                   (subs s (- len (max 0
+                                       (- width 3))))))))]
     (when shortened
       (ui/label shortened @monospaced))))
 
@@ -701,14 +746,85 @@
                                      :highlight-path highlight-path
                                      :width right})))))))
 
+
 (defmethod inspector* :uuid
  [{:keys [obj width height] :as m}]
   (inspector-uuid m))
 
+(defn inspector-file [{:keys [obj width height path highlight-path]}]
+  (let [[left right] (split-ratio (- width 1) one-third)
+        tag (symbol "#java.io.File")]
+    (ui/horizontal-layout
+     (inspector* {:obj tag
+                  :height height
+                  :width left})
+     (indent 1)
+     (let [child-path (conj path '(str))]
+       (wrap-highlight
+        child-path
+        highlight-path
+        (wrap-selection (java.io.File/.getAbsolutePath obj)
+                        child-path
+                        (inspector* {:obj (str obj)
+                                     :height height
+                                     :path child-path
+                                     :highlight-path highlight-path
+                                     :width right})))))))
+
+
+(defmethod inspector* :file
+ [{:keys [obj width height] :as m}]
+  (inspector-file m))
+
+(defn inspector-namespace [{:keys [obj width height path highlight-path]}]
+  (let [tag (symbol "#ns")
+        nname (ns-name obj)
+        
+        tag-width (min 3 width)
+        name-width (max 0 (- width tag-width 1))]
+    (ui/horizontal-layout
+     (ilabel "#ns" tag-width)
+     (indent 1)
+     (ilabel-reverse nname name-width))))
+
+
+(defmethod inspector* :namespace
+ [{:keys [obj width height] :as m}]
+  (inspector-namespace m))
+
+(defn inspector-inst [{:keys [obj width height path highlight-path]}]
+  (let [[left right] (split-ratio (- width 1) one-third)
+        tag (symbol "#inst")]
+    (ui/horizontal-layout
+     (inspector* {:obj tag
+                  :height height
+                  :width left})
+     (indent 1)
+     (let [child-path (conj path '(str))]
+       (wrap-highlight
+        child-path
+        highlight-path
+        (wrap-selection (str obj)
+                        child-path
+                        (inspector* {:obj (str obj)
+                                     :height height
+                                     :path child-path
+                                     :highlight-path highlight-path
+                                     :width right})))))))
+
+
+(defmethod inspector* :inst
+ [{:keys [obj width height] :as m}]
+  (inspector-inst m))
+
+(defmethod inspector* :class
+ [{:keys [obj width height] :as m}]
+  (ilabel (Class/.getName obj) width))
+
 (defn inspector-pwrapped [{:keys [obj width height path highlight-path]}]
   (let [[left right] (split-ratio (- width 2) one-third)
         k 'PWrapped
-        v (-unwrap obj)]
+        v (deref obj)]
     (ui/horizontal-layout
      (indent 1)
      (inspector* {:obj k
@@ -934,7 +1050,7 @@
                     (if (seq intents)
                       intents
                       [[:set $highlight-path nil]])))
-                (inspector* {:obj (-unwrap specimen)
+                (inspector* {:obj (deref specimen)
                              :height height
                              :path []
                              :offset offset
