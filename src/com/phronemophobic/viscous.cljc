@@ -148,6 +148,9 @@
       (keyword? obj) :keyword
       (boolean? obj) :boolean
       (nil? obj) :nil
+      (instance? clojure.lang.Indexed obj) :vector
+      ;; check after indexed since many ordered types are associative 
+      (instance? clojure.lang.Associative obj) :map
       (coll? obj) :collection
       (seqable? obj) :seqable
       (tagged-literal? obj) :tagged-literal
