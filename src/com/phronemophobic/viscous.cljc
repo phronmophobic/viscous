@@ -824,7 +824,7 @@
 
 (defmethod inspector* :class
  [{:keys [obj width height] :as m}]
-  (ilabel (Class/.getName obj) width))
+  (ilabel-reverse (Class/.getName obj) width))
 
 (defn inspector-pwrapped [{:keys [obj width height path highlight-path]}]
   (let [[left right] (split-ratio (- width 2) one-third)
