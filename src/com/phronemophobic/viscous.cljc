@@ -119,6 +119,7 @@
    [0.6666666865348816 0.06666667014360428 0.06666667014360428],
    :meta [0.3333333432674408 0.3333333432674408 0.3333333432674408],
    :tag [0.06666667014360428 0.46666666865348816 0.0],
+   :discard [0.4 0.4 0.4]
    :qualifier
    [0.3333333432674408 0.3333333432674408 0.3333333432674408],
    :variable-2 [0.0 0.3333333432674408 0.6666666865348816]})
@@ -235,13 +236,14 @@
   [{:keys [obj width height]}]
   (let [[left right] (split-ratio width one-third)]
     (ui/horizontal-layout
-     (ilabel (inspector-dispatch {:obj obj
-                                  :width width
-                                  :height height})
-             left)
-     (ilabel (type obj)
-             right))))
-
+     (ui/with-color
+      (:discard colors )
+      (ilabel ":object" (dec left)))
+     (ui/translate
+      @cell-width 0
+      (inspector* {:obj (type obj)
+                  :width right
+                  :height height})))))
 #?(:clj
    (defmethod inspector* :throwable
      [m]
