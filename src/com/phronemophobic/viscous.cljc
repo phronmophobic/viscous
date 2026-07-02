@@ -717,7 +717,6 @@
 (:clj
  (defn inspector-deref [{:keys [obj width height path highlight-path]}]
    (let [[left right] (split-ratio (- width 2) one-third)
-         k (symbol (.getName (class obj)))
          v (if (instance? clojure.lang.IPending obj)
              (if (realized? obj)
                @obj
@@ -725,9 +724,7 @@
              (deref obj))]
      (ui/horizontal-layout
       (indent 1)
-      (inspector* {:obj k
-                   :height height
-                   :width left})
+      (ilabel-reverse (Class/.getName (class obj)) left)
       (indent 1)
       (let [child-path (conj path '(deref))]
         (wrap-highlight
