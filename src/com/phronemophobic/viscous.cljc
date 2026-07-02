@@ -161,6 +161,7 @@
       (class? obj) :class
       (instance? java.io.File obj) :file
       ;; (satisfies? PWrapped obj) :pwrapped
+      (var? obj) :var
       #?@(:clj [(instance? clojure.lang.IDeref obj) :deref])
       (fn? obj) :fn
       #?@(:clj [(instance? Throwable obj) :throwable])
@@ -669,6 +670,48 @@
   [{:keys [obj width height] :as m}]
   (inspector-map-entry m))
 
+
+#?
+(:clj
+ (defn inspector-var [{:keys [obj width height path highlight-path]}]
+   (let [[left right] (split-ratio (dec width)
+                                   one-third)
+         left-inspector
+         (ui/with-color
+          (:discard colors)
+          (if (<= left 2)
+            (ilabel "#'" left)
+            (let [ns-name (ns-name (.ns obj))
+                  var-name (name (.sym obj))
+                  s (str ns-name "/" var-name)]
+              (ui/horizontal-layout
+               (ui/label "#'")              
+               (ilabel-reverse s (- left 2))))))
+         
+         v @obj
+         right-inspector (let [child-path (conj path '(deref))]
+                           (wrap-highlight
+                            child-path
+                            highlight-path
+                            (wrap-selection v
+                                            child-path
+                                            (inspector* {:obj v
+                                                         :height height
+                                                         :path child-path
+                                                         :highlight-path highlight-path
+                                                         :width right}))))]
+     
+     
+     (ui/horizontal-layout
+      left-inspector
+      (indent 1)
+      right-inspector))))
+
+#?
+(:clj
+ (defmethod inspector* :var
+   [{:keys [obj width height] :as m}]
+   (inspector-var m)))
 
 #?
 (:clj
